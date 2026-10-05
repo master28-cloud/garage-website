@@ -1,0 +1,103 @@
+// AutoPro Garage — Prisma schema (Neon Postgres)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceType {
+  ENGINE_DIAGNOSTICS
+  PANEL_BEATING
+  WHEEL_ALIGNMENT
+  BRAKE_SUSPENSION
+  AC_SERVICING
+  ELECTRICAL
+  PRE_PURCHASE_INSPECTION
+  INSURANCE_CLAIM
+  OTHER
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+model Booking {
+  id             String        @id @default(cuid())
+  name           String
+  phone          String
+  email          String?
+  vehicleMake    String
+  vehicleModel   String
+  vehicleYear    Int?
+  service        ServiceType
+  preferredDate  DateTime
+  notes          String?
+  status         BookingStatus @default(PENDING)
+  consentPrivacy Boolean       @default(false)
+  consentMarket  Boolean       @default(false)
+  ipHash         String?
+  userAgent      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([phone])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(ADMIN)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorEmail String
+  action     String
+  entity     String
+  entityId   String?
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorEmail])
+}
+
+model NewsletterLead {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String?
+  consent   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model CookieConsent {
+  id         String   @id @default(cuid())
+  anonId     String   @unique
+  necessary  Boolean  @default(true)
+  analytics  Boolean  @default(false)
+  marketing  Boolean  @default(false)
+  version    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
