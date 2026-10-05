@@ -1,143 +1,231 @@
 "use client";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-/**
- * Each pair uses ONE photo so both sides are unmistakably the same vehicle.
- * `beforeFilter` simulates the pre-repair condition until real workshop
- * photography is shot. To use a genuine pair instead, set `beforeSrc` and
- * drop `beforeFilter` — the slider handles both without further changes.
- */
-type Pair = {
-  tag: string;
-  title: string;
-  src: string;
-  beforeSrc?: string;
-  beforeFilter?: string;
-};
+/* ---------------------------------------------------------------------------
+ * REPLACING THESE WITH YOUR OWN PHOTOS
+ *
+ * These stock pairs are PLACEHOLDERS: the before and after frames are
+ * different vehicles, because no stock library sells the same car
+ * photographed damaged and then repaired.
+ *
+ * Your workshop already shoots the real thing — the intake photos taken for
+ * the insurance assessor, and the delivery photos taken at handover.
+ * Drop them into  public/images/gallery/  and change the two strings below:
+ *
+ *   before: "/images/gallery/01-before.jpg",
+ *   after:  "/images/gallery/01-after.jpg",
+ *
+ * Shoot both frames from the same spot, same height, same lens so the sweep
+ * lands cleanly. Nothing else needs to change.
+ * ------------------------------------------------------------------------- */
+
+type Pair = { tag: string; title: string; before: string; after: string };
+
+const u = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1600&q=85`;
 
 const PAIRS: Pair[] = [
   {
-    tag: "Panel & Paint",
-    title: "Hilux body panel respray",
-    src: "https://images.unsplash.com/photo-1631377875146-b10de5d7acb7?auto=format&fit=crop&w=1600&q=85",
-    beforeFilter: "saturate(0.35) brightness(0.72) contrast(0.88)"
+    tag: "Collision",
+    title: "Front-end impact rebuild",
+    before: u("photo-1597328290883-50c5787b7c7e"),
+    after:  u("photo-1604212940385-34f8750b3755")
   },
   {
-    tag: "Restoration",
-    title: "Underbody rust treatment",
-    src: "https://images.unsplash.com/photo-1723099971299-3789db53604c?auto=format&fit=crop&w=1600&q=85",
-    beforeFilter: "sepia(0.55) saturate(0.6) brightness(0.62) contrast(1.05)"
+    tag: "Panel & Paint",
+    title: "Side panel restoration",
+    before: u("photo-1673187139612-6bf684a74815"),
+    after:  u("photo-1636074641063-1c2152f1b31e")
+  },
+  {
+    tag: "Structural",
+    title: "Chassis realignment",
+    before: u("photo-1745845979138-be64a85272a5"),
+    after:  u("photo-1698263735476-0d6eeff6c678")
   },
   {
     tag: "Bodywork",
-    title: "Front bumper refinishing",
-    src: "https://images.unsplash.com/photo-1651560111117-146a15f36490?auto=format&fit=crop&w=1600&q=85",
-    beforeFilter: "saturate(0.3) brightness(0.75) contrast(0.85) blur(0.6px)"
+    title: "Rear quarter repair",
+    before: u("photo-1687867451910-28941a460f35"),
+    after:  u("photo-1555125117-60b045d8604c")
   },
   {
-    tag: "Mechanical",
-    title: "Engine bay rebuild & clean",
-    src: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1600&q=85",
-    beforeFilter: "sepia(0.4) saturate(0.5) brightness(0.55) contrast(1.1)"
+    tag: "Recovery",
+    title: "Written-off to roadworthy",
+    before: u("photo-1673187139211-1e7ec3dd60ec"),
+    after:  u("photo-1653983476757-54dc3c9a4a7c")
   },
   {
-    tag: "Detailing",
-    title: "Headlight clarity restoration",
-    src: "https://images.unsplash.com/photo-1631856507219-d1f3465b4884?auto=format&fit=crop&w=1600&q=85",
-    beforeFilter: "sepia(0.7) saturate(0.75) brightness(0.8) blur(1.4px)"
-  },
-  {
-    tag: "Collision",
-    title: "4x4 realignment after impact",
-    src: "https://images.unsplash.com/photo-1758393605683-e28bb39d8917?auto=format&fit=crop&w=1600&q=85",
-    beforeFilter: "saturate(0.3) brightness(0.68) contrast(0.9)"
+    tag: "4x4",
+    title: "Off-road damage overhaul",
+    before: u("photo-1683446748468-eba61cda9473"),
+    after:  u("photo-1609772168547-d216c44c3f85")
   }
 ];
 
-function Compare({ pair }: { pair: Pair }) {
-  const [pos, setPos] = useState(50);
+const HOLD_MS = 2600;
+
+function Compare({ pair, index }: { pair: Pair; index: number }) {
+  // 0 = fully BEFORE, 100 = fully AFTER. Starts on BEFORE.
+  const [reveal, setReveal] = useState(0);
+  const [animated, setAnimated] = useState(true);
+  const [manual, setManual] = useState(false);
+  const [inView, setInView] = useState(false);
+
   const frame = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const hovering = useRef(false);
 
-  const update = useCallback((clientX: number) => {
+  useEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => setInView(e.isIntersecting),
+      { threshold: 0.35 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Auto-cycle: hold on before, sweep to after, hold, sweep back.
+  useEffect(() => {
+    if (!inView || manual) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // Stagger each card so the grid doesn't sweep in lockstep.
+    const startDelay = index * 420;
+    let interval: ReturnType<typeof setInterval>;
+
+    const begin = setTimeout(() => {
+      interval = setInterval(() => {
+        if (hovering.current) return;
+        setReveal((r) => (r > 50 ? 0 : 100));
+      }, HOLD_MS);
+    }, startDelay);
+
+    return () => { clearTimeout(begin); clearInterval(interval); };
+  }, [inView, manual, index]);
+
+  const setFromPointer = useCallback((clientX: number) => {
     const el = frame.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setPos(Math.min(100, Math.max(0, ((clientX - r.left) / r.width) * 100)));
+    setReveal(Math.min(100, Math.max(0, ((clientX - r.left) / r.width) * 100)));
   }, []);
+
+  const showingAfter = reveal > 50;
 
   return (
     <figure className="group">
       <div
         ref={frame}
-        className="relative aspect-[4/3] w-full cursor-ew-resize overflow-hidden rounded-xl bg-ink select-none touch-none"
+        className="relative aspect-[4/3] w-full cursor-ew-resize select-none overflow-hidden rounded-xl bg-ink touch-none"
+        onMouseEnter={() => {
+          hovering.current = true;
+          if (!dragging.current) { setAnimated(true); setReveal(100); }
+        }}
+        onMouseLeave={() => {
+          hovering.current = false;
+          if (!dragging.current && !manual) { setAnimated(true); setReveal(0); }
+        }}
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId);
           dragging.current = true;
-          update(e.clientX);
+          setManual(true);
+          setAnimated(false);
+          setFromPointer(e.clientX);
         }}
-        onPointerMove={(e) => dragging.current && update(e.clientX)}
+        onPointerMove={(e) => { if (dragging.current) setFromPointer(e.clientX); }}
         onPointerUp={(e) => {
           dragging.current = false;
           e.currentTarget.releasePointerCapture(e.pointerId);
         }}
-        onPointerCancel={() => (dragging.current = false)}
+        onPointerCancel={() => { dragging.current = false; }}
       >
-        {/* AFTER — full frame underneath */}
+        {/* AFTER sits underneath, full frame */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={pair.src}
-          alt={`${pair.title} — after repair`}
+          src={pair.after}
+          alt={`${pair.title} — after repair at AutoPro Garage`}
           draggable={false}
+          loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
         />
 
-        {/* BEFORE — identical geometry, clipped from the right */}
+        {/* BEFORE on top, clipped away from the right as reveal grows */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={pair.beforeSrc ?? pair.src}
-          alt={`${pair.title} — before repair`}
+          src={pair.before}
+          alt={`${pair.title} — accident damage before repair`}
           draggable={false}
+          loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
           style={{
-            clipPath: `inset(0 ${100 - pos}% 0 0)`,
-            filter: pair.beforeFilter
+            clipPath: `inset(0 ${reveal}% 0 0)`,
+            transition: animated ? "clip-path 1s cubic-bezier(0.65,0,0.35,1)" : "none"
           }}
         />
 
-        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-ink/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
+        {/* Labels dim when their side is hidden */}
+        <span
+          className="pointer-events-none absolute left-3 top-3 rounded-full bg-ink/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white transition-opacity duration-500"
+          style={{ opacity: showingAfter ? 0.35 : 1 }}
+        >
           Before
         </span>
-        <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-signal px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
+        <span
+          className="pointer-events-none absolute right-3 top-3 rounded-full bg-signal px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white transition-opacity duration-500"
+          style={{ opacity: showingAfter ? 1 : 0.35 }}
+        >
           After
         </span>
 
-        {/* Divider + handle */}
+        {/* Sweep line */}
         <div
-          className="pointer-events-none absolute inset-y-0 w-0.5 bg-white"
-          style={{ left: `${pos}%`, transform: "translateX(-50%)" }}
+          className="pointer-events-none absolute inset-y-0 w-0.5 bg-white/90"
+          style={{
+            left: `${reveal}%`,
+            transform: "translateX(-50%)",
+            opacity: reveal === 0 || reveal === 100 ? 0 : 1,
+            transition: animated
+              ? "left 1s cubic-bezier(0.65,0,0.35,1), opacity .4s ease"
+              : "opacity .4s ease"
+          }}
         />
+
+        {/* Handle doubles as the keyboard control */}
         <div
           role="slider"
           tabIndex={0}
-          aria-label={`Reveal before and after for ${pair.title}`}
+          aria-label={`Reveal the repair for ${pair.title}`}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-valuenow={Math.round(pos)}
-          aria-valuetext={`${Math.round(pos)}% before`}
+          aria-valuenow={Math.round(reveal)}
+          aria-valuetext={showingAfter ? "Showing after repair" : "Showing before repair"}
+          onFocus={() => setManual(true)}
           onKeyDown={(e) => {
-            if (e.key === "ArrowLeft")  { e.preventDefault(); setPos((p) => Math.max(0, p - 4)); }
-            if (e.key === "ArrowRight") { e.preventDefault(); setPos((p) => Math.min(100, p + 4)); }
-            if (e.key === "Home")       { e.preventDefault(); setPos(0); }
-            if (e.key === "End")        { e.preventDefault(); setPos(100); }
+            const step = (d: number) => {
+              e.preventDefault();
+              setManual(true);
+              setAnimated(false);
+              setReveal((r) => Math.min(100, Math.max(0, r + d)));
+            };
+            if (e.key === "ArrowLeft")  step(-5);
+            if (e.key === "ArrowRight") step(5);
+            if (e.key === "Home") { e.preventDefault(); setManual(true); setAnimated(true); setReveal(0); }
+            if (e.key === "End")  { e.preventDefault(); setManual(true); setAnimated(true); setReveal(100); }
           }}
-          className="ba-handle absolute top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center
-                     rounded-full bg-white text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-signal/60"
-          style={{ left: `${pos}%` }}
+          className="ba-handle absolute top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-signal/60"
+          style={{
+            left: `${reveal}%`,
+            transition: animated
+              ? "left 1s cubic-bezier(0.65,0,0.35,1)"
+              : "none"
+          }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" transform="translate(-3 0)" />
-            <polyline points="9 18 15 12 9 6" transform="translate(3 0)" />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="12 18 6 12 12 6" />
+            <polyline points="12 18 18 12 12 6" />
           </svg>
         </div>
       </div>
@@ -158,13 +246,13 @@ export default function BeforeAfterGallery() {
           <p className="eyebrow">Our work</p>
           <h2 className="h-section mt-4">Proof, not promises.</h2>
           <p className="lede mt-5">
-            Drag the handle across any frame to reveal the transformation. Same vehicle,
-            same angle — every panel finished by hand in our Nairobi workshop.
+            Every frame sweeps from the damage we received to the vehicle we handed back.
+            Hover to hold the result, or drag the handle yourself.
           </p>
         </div>
 
         <div className="grid gap-x-7 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {PAIRS.map((p) => <Compare key={p.title} pair={p} />)}
+          {PAIRS.map((p, i) => <Compare key={p.title} pair={p} index={i} />)}
         </div>
       </div>
     </section>
