@@ -1,6 +1,10 @@
 // AutoPro Garage — Prisma schema (Neon Postgres)
 generator client {
   provider = "prisma-client-js"
+  // "native" builds for this machine; the rhel target is what Netlify
+  // Functions run on (Amazon Linux). Without it the deployed site throws
+  // "Query engine library for current platform could not be found".
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
