@@ -1,41 +1,42 @@
-import { Target, Eye, Gem } from "lucide-react";
-
-const cards = [
-  {
-    icon: Target,
-    label: "Mission",
-    body: "To deliver world-class automotive care that restores confidence, safety, and performance to every vehicle we touch.",
-  },
-  {
-    icon: Eye,
-    label: "Vision",
-    body: "To be East Africa's most trusted and innovative automotive repair destination by 2030.",
-  },
-  {
-    icon: Gem,
-    label: "Core Values",
-    body: "Integrity · Craftsmanship · Innovation · Customer Obsession · Sustainability",
-  },
-];
+const VALUES = ["Integrity", "Craftsmanship", "Innovation", "Customer Obsession", "Sustainability"];
 
 export default function MissionVision() {
   return (
-    <section id="about" className="py-20 sm:py-28">
+    <section id="about" className="section bg-ink text-white">
       <div className="container-x">
-        <div className="mb-12 max-w-2xl">
-          <p className="text-brand-green font-semibold uppercase tracking-widest text-xs">Who we are</p>
-          <h2 className="mt-2 text-4xl font-bold sm:text-5xl">Built on principles, powered by passion.</h2>
+        <div className="mb-16 max-w-2xl">
+          <p className="eyebrow">Who we are</p>
+          <h2 className="h-section mt-4 text-white">Built on principles, powered by people.</h2>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {cards.map(({ icon: Icon, label, body }) => (
-            <div key={label} className="card border-l-4 border-brand-green">
-              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-navy text-brand-green">
-                <Icon size={22} />
-              </div>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-brand-blue">{label}</h3>
-              <p className="mt-2 text-lg text-slate-700">{body}</p>
-            </div>
-          ))}
+
+        <div className="grid gap-px overflow-hidden rounded-2xl bg-white/12 md:grid-cols-3">
+          <div className="bg-ink p-9">
+            <p className="eyebrow">Mission</p>
+            <p className="mt-4 text-xl leading-snug text-white">
+              To deliver world-class automotive care that restores confidence, safety and
+              performance to every vehicle we touch.
+            </p>
+          </div>
+
+          <div className="bg-ink p-9">
+            <p className="eyebrow">Vision</p>
+            <p className="mt-4 text-xl leading-snug text-white">
+              To be East Africa&apos;s most trusted and innovative automotive repair
+              destination by 2030.
+            </p>
+          </div>
+
+          <div className="bg-ink p-9">
+            <p className="eyebrow">Core Values</p>
+            <ul className="mt-4 space-y-2.5">
+              {VALUES.map((v) => (
+                <li key={v} className="flex items-center gap-3 text-lg text-white">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-signal" />
+                  {v}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>

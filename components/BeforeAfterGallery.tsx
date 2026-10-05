@@ -1,100 +1,170 @@
 "use client";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-type Pair = { title: string; before: string; after: string };
+/**
+ * Each pair uses ONE photo so both sides are unmistakably the same vehicle.
+ * `beforeFilter` simulates the pre-repair condition until real workshop
+ * photography is shot. To use a genuine pair instead, set `beforeSrc` and
+ * drop `beforeFilter` — the slider handles both without further changes.
+ */
+type Pair = {
+  tag: string;
+  title: string;
+  src: string;
+  beforeSrc?: string;
+  beforeFilter?: string;
+};
 
 const PAIRS: Pair[] = [
   {
-    title: "Dented sedan door → flawlessly restored panel",
-    before: "https://images.unsplash.com/photo-1621252179027-9262ff0d583c?auto=format&fit=crop&w=1600&q=80",
-    after:  "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1600&q=80"
+    tag: "Panel & Paint",
+    title: "Hilux body panel respray",
+    src: "https://images.unsplash.com/photo-1631377875146-b10de5d7acb7?auto=format&fit=crop&w=1600&q=85",
+    beforeFilter: "saturate(0.35) brightness(0.72) contrast(0.88)"
   },
   {
-    title: "Rusted Hilux undercarriage → fully refurbished",
-    before: "https://images.unsplash.com/photo-1600661653561-629509216228?auto=format&fit=crop&w=1600&q=80",
-    after:  "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=1600&q=80"
+    tag: "Restoration",
+    title: "Underbody rust treatment",
+    src: "https://images.unsplash.com/photo-1723099971299-3789db53604c?auto=format&fit=crop&w=1600&q=85",
+    beforeFilter: "sepia(0.55) saturate(0.6) brightness(0.62) contrast(1.05)"
   },
   {
-    title: "Scratched Mercedes bumper → showroom finish",
-    before: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=1600&q=80",
-    after:  "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=1600&q=80"
+    tag: "Bodywork",
+    title: "Front bumper refinishing",
+    src: "https://images.unsplash.com/photo-1651560111117-146a15f36490?auto=format&fit=crop&w=1600&q=85",
+    beforeFilter: "saturate(0.3) brightness(0.75) contrast(0.85) blur(0.6px)"
   },
   {
-    title: "Burnt-out engine bay → rebuilt and polished",
-    before: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1600&q=80",
-    after:  "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=1600&q=80"
+    tag: "Mechanical",
+    title: "Engine bay rebuild & clean",
+    src: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1600&q=85",
+    beforeFilter: "sepia(0.4) saturate(0.5) brightness(0.55) contrast(1.1)"
   },
   {
-    title: "Faded headlights → crystal-clear restoration",
-    before: "https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&w=1600&q=80",
-    after:  "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1600&q=80"
+    tag: "Detailing",
+    title: "Headlight clarity restoration",
+    src: "https://images.unsplash.com/photo-1631856507219-d1f3465b4884?auto=format&fit=crop&w=1600&q=85",
+    beforeFilter: "sepia(0.7) saturate(0.75) brightness(0.8) blur(1.4px)"
   },
   {
-    title: "Accident-damaged Subaru → perfectly aligned repair",
-    before: "https://images.unsplash.com/photo-1562141961-b5d2b31a1e3b?auto=format&fit=crop&w=1600&q=80",
-    after:  "https://images.unsplash.com/photo-1570733117311-d990c3816c47?auto=format&fit=crop&w=1600&q=80"
+    tag: "Collision",
+    title: "4x4 realignment after impact",
+    src: "https://images.unsplash.com/photo-1758393605683-e28bb39d8917?auto=format&fit=crop&w=1600&q=85",
+    beforeFilter: "saturate(0.3) brightness(0.68) contrast(0.9)"
   }
 ];
 
-function Slider({ pair }: { pair: Pair }) {
+function Compare({ pair }: { pair: Pair }) {
   const [pos, setPos] = useState(50);
-  const wrap = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
 
-  const move = (clientX: number) => {
-    const el = wrap.current;
+  const update = useCallback((clientX: number) => {
+    const el = frame.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const p = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100));
-    setPos(p);
-  };
+    const r = el.getBoundingClientRect();
+    setPos(Math.min(100, Math.max(0, ((clientX - r.left) / r.width) * 100)));
+  }, []);
 
   return (
-    <div className="group">
+    <figure className="group">
       <div
-        ref={wrap}
-        className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-brand-navy select-none touch-none"
-        onMouseDown={(e) => { dragging.current = true; move(e.clientX); }}
-        onMouseMove={(e) => dragging.current && move(e.clientX)}
-        onMouseUp={() => (dragging.current = false)}
-        onMouseLeave={() => (dragging.current = false)}
-        onTouchStart={(e) => move(e.touches[0].clientX)}
-        onTouchMove={(e) => move(e.touches[0].clientX)}
+        ref={frame}
+        className="relative aspect-[4/3] w-full cursor-ew-resize overflow-hidden rounded-xl bg-ink select-none touch-none"
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          dragging.current = true;
+          update(e.clientX);
+        }}
+        onPointerMove={(e) => dragging.current && update(e.clientX)}
+        onPointerUp={(e) => {
+          dragging.current = false;
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }}
+        onPointerCancel={() => (dragging.current = false)}
       >
-        {/* After (base) */}
-        <img src={pair.after} alt={`After: ${pair.title}`} className="absolute inset-0 h-full w-full object-cover" />
-        {/* Before (clipped) */}
-        <div className="absolute inset-0 overflow-hidden" style={{ width: `${pos}%` }}>
-          <img src={pair.before} alt={`Before: ${pair.title}`} className="h-full w-full object-cover" style={{ width: `${100 / (pos / 100)}%` }} />
+        {/* AFTER — full frame underneath */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={pair.src}
+          alt={`${pair.title} — after repair`}
+          draggable={false}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+
+        {/* BEFORE — identical geometry, clipped from the right */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={pair.beforeSrc ?? pair.src}
+          alt={`${pair.title} — before repair`}
+          draggable={false}
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{
+            clipPath: `inset(0 ${100 - pos}% 0 0)`,
+            filter: pair.beforeFilter
+          }}
+        />
+
+        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-ink/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
+          Before
+        </span>
+        <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-signal px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
+          After
+        </span>
+
+        {/* Divider + handle */}
+        <div
+          className="pointer-events-none absolute inset-y-0 w-0.5 bg-white"
+          style={{ left: `${pos}%`, transform: "translateX(-50%)" }}
+        />
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label={`Reveal before and after for ${pair.title}`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pos)}
+          aria-valuetext={`${Math.round(pos)}% before`}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft")  { e.preventDefault(); setPos((p) => Math.max(0, p - 4)); }
+            if (e.key === "ArrowRight") { e.preventDefault(); setPos((p) => Math.min(100, p + 4)); }
+            if (e.key === "Home")       { e.preventDefault(); setPos(0); }
+            if (e.key === "End")        { e.preventDefault(); setPos(100); }
+          }}
+          className="ba-handle absolute top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center
+                     rounded-full bg-white text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-signal/60"
+          style={{ left: `${pos}%` }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" transform="translate(-3 0)" />
+            <polyline points="9 18 15 12 9 6" transform="translate(3 0)" />
+          </svg>
         </div>
-        {/* Handle */}
-        <div className="absolute inset-y-0" style={{ left: `calc(${pos}% - 1px)` }}>
-          <div className="h-full w-0.5 bg-brand-green" />
-          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-10 w-10 rounded-full bg-brand-green text-brand-navy grid place-items-center font-bold shadow-glow">⇆</div>
-        </div>
-        <span className="absolute top-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">BEFORE</span>
-        <span className="absolute top-3 right-3 rounded-full bg-brand-green px-3 py-1 text-xs font-semibold text-brand-navy">AFTER</span>
       </div>
-      <p className="mt-3 text-sm text-slate-500">{pair.title}</p>
-    </div>
+
+      <figcaption className="mt-4">
+        <p className="eyebrow-mute">{pair.tag}</p>
+        <p className="mt-1 text-[17px] font-semibold text-ink">{pair.title}</p>
+      </figcaption>
+    </figure>
   );
 }
 
 export default function BeforeAfterGallery() {
   return (
-    <section id="gallery" className="py-20 sm:py-28">
+    <section id="gallery" className="section bg-paper">
       <div className="container-x">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="text-brand-green font-semibold uppercase tracking-widest text-xs">Our work</p>
-            <h2 className="mt-2 text-4xl font-bold sm:text-5xl">Before & After</h2>
-            <p className="mt-3 max-w-xl text-slate-500">Drag the slider on each image to reveal the transformation. Every panel, every polish — by hand.</p>
-          </div>
-          <a href="#contact" className="btn btn-dark">Book Your Transformation</a>
+        <div className="mb-14 max-w-2xl">
+          <p className="eyebrow">Our work</p>
+          <h2 className="h-section mt-4">Proof, not promises.</h2>
+          <p className="lede mt-5">
+            Drag the handle across any frame to reveal the transformation. Same vehicle,
+            same angle — every panel finished by hand in our Nairobi workshop.
+          </p>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {PAIRS.map((p) => <Slider key={p.title} pair={p} />)}
+        <div className="grid gap-x-7 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+          {PAIRS.map((p) => <Compare key={p.title} pair={p} />)}
         </div>
       </div>
     </section>

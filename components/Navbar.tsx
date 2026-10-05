@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 const nav = [
-  { href: "#gallery",   label: "Our Work" },
-  { href: "#services",  label: "Services" },
-  { href: "#about",     label: "About" },
-  { href: "#team",      label: "Team" },
-  { href: "#contact",   label: "Book" }
+  { href: "#gallery",  label: "Our Work" },
+  { href: "#services", label: "Services" },
+  { href: "#about",    label: "About" },
+  { href: "#team",     label: "Team" }
 ];
 
 export default function Navbar() {
@@ -16,51 +15,59 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 40);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
   return (
     <header
-      className={`sticky top-0 z-40 transition-all ${
-        scrolled ? "bg-brand-navy/90 backdrop-blur shadow-md" : "bg-transparent"
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ease-smooth ${
+        scrolled ? "bg-ink/92 backdrop-blur-md" : "bg-gradient-to-b from-ink/70 to-transparent"
       }`}
     >
       <nav className="container-x flex items-center justify-between py-4">
-        <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
-          <span className="h-8 w-8 rounded-lg bg-brand-green grid place-items-center text-brand-navy font-bold">A</span>
-          <span>AutoPro<span className="text-brand-green">.</span></span>
+        <Link href="/" className="flex items-center gap-2.5 text-lg font-bold text-white">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-signal text-sm font-bold text-white">A</span>
+          AutoPro
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden items-center gap-9 md:flex">
           {nav.map((n) => (
-            <a key={n.href} href={n.href} className="text-white/90 hover:text-brand-green transition">
+            <a key={n.href} href={n.href}
+               className="text-[15px] font-medium text-white/85 transition-colors hover:text-white">
               {n.label}
             </a>
           ))}
-          <a href="#contact" className="btn btn-primary">Book a Service</a>
+          <a href="#contact" className="btn btn-solid !px-6 !py-2.5 !text-sm">Book a Service</a>
         </div>
 
         <button
-          aria-label="Open menu"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="md:hidden text-white p-2"
+          className="p-2 text-white md:hidden"
         >
-          {open ? <X /> : <Menu />}
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </nav>
 
       {open && (
-        <div className="md:hidden bg-brand-navy/95 border-t border-white/10">
-          <div className="container-x py-4 flex flex-col gap-3">
+        <div className="border-t border-white/10 bg-ink md:hidden">
+          <div className="container-x flex flex-col gap-1 py-5">
             {nav.map((n) => (
-              <a key={n.href} href={n.href} onClick={() => setOpen(false)} className="text-white py-2">
+              <a key={n.href} href={n.href} onClick={() => setOpen(false)}
+                 className="py-3 text-lg font-medium text-white">
                 {n.label}
               </a>
             ))}
-            <a href="#contact" onClick={() => setOpen(false)} className="btn btn-primary w-full">
+            <a href="#contact" onClick={() => setOpen(false)} className="btn btn-solid mt-4 w-full">
               Book a Service
             </a>
           </div>

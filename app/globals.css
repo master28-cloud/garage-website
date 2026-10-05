@@ -2,64 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #ffffff;
-  --fg: #0E1116;
-  --muted: #475569;
-  --card: #ffffff;
-  --border: #e5e7eb;
-  --brand-navy: #0A1A2F;
-  --brand-blue: #0B3D91;
-  --brand-green: #19C37D;
+/* Fixed light-base theme with explicit dark sections.
+   No prefers-color-scheme switching — it was producing unreadable text. */
+html, body {
+  background: #FBFAF8;
+  color: #0C0D0E;
+  scroll-behavior: smooth;
+}
+body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0A1118;
-    --fg: #F4F6F8;
-    --muted: #94a3b8;
-    --card: #111827;
-    --border: #1f2937;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0A1118;
-  --fg: #F4F6F8;
-  --muted: #94a3b8;
-  --card: #111827;
-  --border: #1f2937;
+h1, h2, h3, h4 {
+  font-family: var(--font-poppins), var(--font-inter), system-ui, sans-serif;
+  letter-spacing: -0.035em;
+  line-height: 1.04;
 }
 
-html, body { background: var(--bg); color: var(--fg); scroll-behavior: smooth; }
-body { font-family: var(--font-inter), system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-h1,h2,h3,h4 { font-family: var(--font-poppins), var(--font-inter), system-ui, sans-serif; letter-spacing: -0.02em; }
+::selection { background: #FF5A1F; color: #fff; }
 
+.container-x { @apply mx-auto w-full max-w-content px-5 sm:px-8 lg:px-12; }
+
+/* ---- Buttons ---- */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold transition-all duration-200;
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5
+         text-[15px] font-semibold transition-all duration-300 ease-smooth
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2;
 }
-.btn-primary { @apply bg-brand-green text-brand-navy hover:scale-[1.02] hover:shadow-glow; }
-.btn-ghost   { @apply border border-white/20 text-white hover:bg-white/10; }
-.btn-dark    { @apply bg-brand-navy text-white hover:bg-brand-blue; }
+.btn-solid  { @apply bg-signal text-white hover:bg-signal-dark; }
+.btn-ink    { @apply bg-ink text-white hover:bg-ink-soft; }
+.btn-light  { @apply bg-white/95 text-ink hover:bg-white; }
+.btn-outline{ @apply border border-white/35 text-white backdrop-blur-sm hover:bg-white hover:text-ink; }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  @apply rounded-2xl p-6 shadow-card;
+/* ---- Section rhythm ---- */
+.section      { @apply py-24 sm:py-32; }
+.eyebrow      { @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-signal; }
+.eyebrow-mute { @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-steel; }
+
+.h-section { @apply text-[2.5rem] sm:text-6xl font-bold tracking-tightest; }
+.lede      { @apply text-lg leading-relaxed text-steel; }
+
+/* ---- Surfaces ---- */
+.panel {
+  @apply rounded-2xl border border-paper-line bg-white p-7 transition-all duration-300 ease-smooth;
 }
+.panel-hover { @apply hover:border-ink/15 hover:-translate-y-0.5; }
 
-.container-x { @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8; }
-
-.gradient-text {
-  background: linear-gradient(90deg,#19C37D 0%,#0B3D91 100%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+/* ---- Reveal on scroll ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
 }
-
-/* reveal on scroll */
-.reveal { opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .7s ease; }
 .reveal.visible { opacity: 1; transform: none; }
 
-/* reduce motion */
+/* ---- Before/after slider handle ---- */
+.ba-handle {
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.9), 0 6px 20px rgba(0,0,0,0.35);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; }
 }

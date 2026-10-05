@@ -2,15 +2,15 @@
 import { useEffect, useRef, useState } from "react";
 
 const stats = [
-  { label: "Established",            value: 2011, suffix: "" },
-  { label: "Employees",              value: 47,   suffix: "" },
-  { label: "Vehicles Serviced",      value: 18000, suffix: "+" },
-  { label: "Service Bays",           value: 12,   suffix: "" },
-  { label: "Certified Technicians",  value: 24,   suffix: "" },
-  { label: "Customer Satisfaction",  value: 97,   suffix: "%" }
+  { label: "Established",           value: 2011,  suffix: "", raw: true },
+  { label: "Team members",          value: 47,    suffix: "" },
+  { label: "Vehicles serviced",     value: 18000, suffix: "+" },
+  { label: "Service bays",          value: 12,    suffix: "" },
+  { label: "Certified technicians", value: 24,    suffix: "" },
+  { label: "Customer satisfaction", value: 97,    suffix: "%" }
 ];
 
-function Counter({ to, suffix }: { to: number; suffix: string }) {
+function Counter({ to, suffix, raw }: { to: number; suffix: string; raw?: boolean }) {
   const [n, setN] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
@@ -18,11 +18,18 @@ function Counter({ to, suffix }: { to: number; suffix: string }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting && !started.current) {
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setN(to);
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting || started.current) return;
           started.current = true;
-          const duration = 1600;
+          const duration = 1500;
           const start = performance.now();
           const tick = (t: number) => {
             const p = Math.min(1, (t - start) / duration);
@@ -30,31 +37,33 @@ function Counter({ to, suffix }: { to: number; suffix: string }) {
             if (p < 1) requestAnimationFrame(tick);
           };
           requestAnimationFrame(tick);
-        }
-      });
-    }, { threshold: 0.4 });
+        });
+      },
+      { threshold: 0.4 }
+    );
     io.observe(el);
     return () => io.disconnect();
   }, [to]);
 
-  return <span ref={ref}>{n.toLocaleString()}{suffix}</span>;
+  return <span ref={ref}>{raw ? n : n.toLocaleString()}{suffix}</span>;
 }
 
 export default function Stats() {
   return (
-    <section className="bg-brand-navy text-white py-20 sm:py-28">
+    <section className="section">
       <div className="container-x">
-        <div className="mb-12 max-w-2xl">
-          <p className="text-brand-green font-semibold uppercase tracking-widest text-xs">By the numbers</p>
-          <h2 className="mt-2 text-4xl font-bold sm:text-5xl">A decade of precision at scale.</h2>
+        <div className="mb-14 max-w-2xl">
+          <p className="eyebrow">By the numbers</p>
+          <h2 className="h-section mt-4">Fourteen years of precision at scale.</h2>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-6">
+
+        <div className="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-6">
           {stats.map((s) => (
-            <div key={s.label} className="rounded-2xl bg-white/5 border border-white/10 p-6">
-              <div className="text-4xl font-extrabold text-brand-green">
-                <Counter to={s.value} suffix={s.suffix} />
+            <div key={s.label} className="border-t-2 border-ink pt-5">
+              <div className="text-[2.75rem] font-bold leading-none tracking-tightest text-ink">
+                <Counter to={s.value} suffix={s.suffix} raw={s.raw} />
               </div>
-              <div className="mt-2 text-sm text-white/70">{s.label}</div>
+              <div className="mt-2.5 text-sm text-steel">{s.label}</div>
             </div>
           ))}
         </div>

@@ -3,46 +3,56 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[88vh] overflow-hidden">
-      {/* Background image — luxury SUV being serviced in Nairobi, from Unsplash (Africa-sourced imagery) */}
+    <section className="relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-ink">
       <Image
-        src="https://images.unsplash.com/photo-1537498425277-c283d32ef9db?auto=format&fit=crop&w=1920&q=80"
-        alt="Luxury SUV being serviced under studio-quality lighting at AutoPro Garage"
-        fill priority sizes="100vw"
-        className="object-cover"
+        src="https://images.unsplash.com/photo-1711386689622-1cda23e10217?auto=format&fit=crop&w=2400&q=85"
+        alt="Technician working on a vehicle in the AutoPro Garage workshop"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-navy/90 via-brand-navy/70 to-brand-blue/60" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_rgba(25,195,125,0.15),_transparent_60%)]" />
+      {/* Legibility scrim — strongest where the copy sits */}
+      <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/25" />
+      <div className="absolute inset-0 bg-ink/20" />
 
-      <div className="container-x relative z-10 flex min-h-[88vh] flex-col justify-center text-white">
+      <div className="container-x relative z-10 flex h-full flex-col justify-end pb-28 sm:justify-center sm:pb-24">
         <div className="max-w-3xl">
-          <span className="inline-block rounded-full border border-brand-green/40 bg-brand-green/10 px-4 py-1 text-xs uppercase tracking-widest text-brand-green">
-            Nairobi · Est. 2011
-          </span>
-          <h1 className="mt-6 text-5xl font-extrabold leading-[1.05] sm:text-6xl md:text-7xl">
-            Drive In Broken.
-            <br />
-            <span className="gradient-text">Drive Out Brilliant.</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-lg text-white/80">
-            Precision engineered. Passion driven. Your car&apos;s second home.
-            Trusted by Kenya&apos;s most discerning drivers for diagnostics, panel beating & complete restoration.
-          </p>
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <Link href="#contact" className="btn btn-primary">Book a Service →</Link>
-            <Link href="#gallery" className="btn btn-ghost">View Our Work</Link>
-          </div>
+          <p className="eyebrow mb-5">Nairobi · Established 2011</p>
 
-          <dl className="mt-14 grid max-w-xl grid-cols-3 gap-6 text-sm text-white/80">
-            <div><dt className="text-brand-green text-2xl font-bold">18k+</dt><dd>Vehicles serviced</dd></div>
-            <div><dt className="text-brand-green text-2xl font-bold">97%</dt><dd>Customer satisfaction</dd></div>
-            <div><dt className="text-brand-green text-2xl font-bold">24</dt><dd>Certified technicians</dd></div>
-          </dl>
+          <h1 className="text-[3.25rem] font-bold leading-[0.95] tracking-tightest text-white sm:text-7xl lg:text-[5.5rem]">
+            Drive in broken.
+            <br />
+            <span className="text-signal">Drive out brilliant.</span>
+          </h1>
+
+          <p className="mt-7 max-w-lg text-lg leading-relaxed text-white/85">
+            Precision engineered. Passion driven. Full-service diagnostics, panel beating
+            and restoration — trusted by Kenya&apos;s most discerning drivers.
+          </p>
+
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <Link href="#contact" className="btn btn-solid">Book a Service</Link>
+            <Link href="#gallery" className="btn btn-outline">View Our Work</Link>
+          </div>
         </div>
       </div>
 
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/50 text-xs animate-bounce">
-        ↓ Scroll
+      {/* Bottom stat strip */}
+      <div className="absolute inset-x-0 bottom-0 z-10 hidden border-t border-white/15 bg-ink/45 backdrop-blur-sm sm:block">
+        <div className="container-x grid grid-cols-4 divide-x divide-white/15">
+          {[
+            ["18,000+", "Vehicles serviced"],
+            ["24", "Certified technicians"],
+            ["12", "Service bays"],
+            ["97%", "Would recommend"]
+          ].map(([v, l]) => (
+            <div key={l} className="px-4 py-5 text-center sm:px-6">
+              <div className="text-2xl font-bold text-white">{v}</div>
+              <div className="mt-0.5 text-xs text-white/65">{l}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

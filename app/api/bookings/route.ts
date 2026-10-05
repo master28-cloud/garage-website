@@ -53,25 +53,34 @@ export async function POST(req: Request) {
           || "0.0.0.0";
   const ua = req.headers.get("user-agent") || "";
 
-  const booking = await prisma.booking.create({
-    data: {
-      name: d.name.trim(),
-      phone: d.phone.trim(),
-      email: d.email?.trim() || null,
-      vehicleMake: d.vehicleMake.trim(),
-      vehicleModel: d.vehicleModel.trim(),
-      vehicleYear: d.vehicleYear ? Number(d.vehicleYear) : null,
-      service: d.service,
-      preferredDate: new Date(d.preferredDate),
-      notes: d.notes?.trim() || null,
-      status: "PENDING",
-      consentPrivacy: true,
-      consentMarket: !!d.consentMarket,
-      ipHash: hashIp(ip),
-      userAgent: ua.slice(0, 200)
-    },
-    select: { id: true, name: true, phone: true, vehicleMake: true, vehicleModel: true, service: true, preferredDate: true }
-  });
+  let booking;
+  try {
+    booking = await prisma.booking.create({
+      data: {
+        name: d.name.trim(),
+        phone: d.phone.trim(),
+        email: d.email?.trim() || null,
+        vehicleMake: d.vehicleMake.trim(),
+        vehicleModel: d.vehicleModel.trim(),
+        vehicleYear: d.vehicleYear ? Number(d.vehicleYear) : null,
+        service: d.service,
+        preferredDate: new Date(d.preferredDate),
+        notes: d.notes?.trim() || null,
+        status: "PENDING",
+        consentPrivacy: true,
+        consentMarket: !!d.consentMarket,
+        ipHash: hashIp(ip),
+        userAgent: ua.slice(0, 200)
+      },
+      select: { id: true, name: true, phone: true, vehicleMake: true, vehicleModel: true, service: true, preferredDate: true }
+    });
+  } catch (e) {
+    console.error("[bookings] database write failed:", e);
+    return NextResponse.json(
+      { error: "We couldn't save your booking right now. Please call us on +254 727 718 981." },
+      { status: 503 }
+    );
+  }
 
   const reference = `APG-${booking.id.slice(-6).toUpperCase()}`;
   const whatsappUrl = buildWhatsAppUrl(

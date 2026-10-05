@@ -10,7 +10,7 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed": "node prisma/seed.mjs"
+    "db:seed": "node --env-file=.env prisma/seed.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

@@ -5,26 +5,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: {
-          navy: "#0A1A2F",
-          blue: "#0B3D91",
-          green: "#19C37D",
-          sand: "#F4EFE6",
-          ink: "#0E1116"
-        }
+        ink:    { DEFAULT: "#0C0D0E", soft: "#17191C", mute: "#2A2D32" },
+        paper:  { DEFAULT: "#FBFAF8", warm: "#F2EFEA", line: "#E3DED6" },
+        signal: { DEFAULT: "#FF5A1F", dark: "#E6440C", light: "#FF8454" },
+        steel:  { DEFAULT: "#5A6069", light: "#8A9099" }
       },
       fontFamily: {
         display: ["var(--font-poppins)", "system-ui", "sans-serif"],
         body: ["var(--font-inter)", "system-ui", "sans-serif"]
       },
-      boxShadow: {
-        glow: "0 20px 60px -20px rgba(25,195,125,0.35)",
-        card: "0 10px 30px -12px rgba(10,26,47,0.25)"
-      },
-      keyframes: {
-        shimmer: { "0%": { backgroundPosition: "-200% 0" }, "100%": { backgroundPosition: "200% 0" } }
-      },
-      animation: { shimmer: "shimmer 2.5s linear infinite" }
+      letterSpacing: { tightest: "-0.045em" },
+      maxWidth: { content: "78rem" },
+      transitionTimingFunction: { smooth: "cubic-bezier(0.22, 1, 0.36, 1)" }
     }
   },
   plugins: []

@@ -35,7 +35,12 @@ export async function POST(req: Request) {
   const token = await createSession({ sub: "admin", email: ADMIN_EMAIL, role: "ADMIN" });
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, {
-    httpOnly: true, sameSite: "lax", secure: true, path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    // Browsers drop Secure cookies on http://localhost, which would make the
+    // dashboard unreachable in local development.
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
     maxAge: 60 * 60 * 8
   });
   return res;
