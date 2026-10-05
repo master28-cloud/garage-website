@@ -23,42 +23,46 @@ type Pair = { tag: string; title: string; before: string; after: string };
 
 const u = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1600&q=85`;
 
+/* Pairs are matched on body type and paint colour so each sweep reads as one
+   vehicle. Silver-on-silver is the closest match available; a damaged-car photo
+   is never tagged with its make, so an exact model match is not possible from
+   stock. Your own intake and handover shots fix that — see the README. */
 const PAIRS: Pair[] = [
   {
     tag: "Collision",
     title: "Front-end impact rebuild",
-    before: u("photo-1597328290883-50c5787b7c7e"),
-    after:  u("photo-1604212940385-34f8750b3755")
+    before: u("photo-1597328290883-50c5787b7c7e"), // silver sedan, crushed hood
+    after:  u("photo-1774874441703-6cdc9f51a8ab")  // silver sedan, restored
+  },
+  {
+    tag: "Bodywork",
+    title: "Front bumper and grille replacement",
+    before: u("photo-1662541547523-118842914aa7"), // smashed front end
+    after:  u("photo-1758855307960-3a6339cb2c27")  // silver sedan, clean front
   },
   {
     tag: "Panel & Paint",
-    title: "Side panel restoration",
-    before: u("photo-1673187139612-6bf684a74815"),
-    after:  u("photo-1636074641063-1c2152f1b31e")
+    title: "Full respray after impact",
+    before: u("photo-1687867451910-28941a460f35"), // accident damage
+    after:  u("photo-1767972885673-1cc21432a2ba")  // grey sedan, finished
   },
   {
     tag: "Structural",
     title: "Chassis realignment",
-    before: u("photo-1745845979138-be64a85272a5"),
-    after:  u("photo-1698263735476-0d6eeff6c678")
-  },
-  {
-    tag: "Bodywork",
-    title: "Rear quarter repair",
-    before: u("photo-1687867451910-28941a460f35"),
-    after:  u("photo-1555125117-60b045d8604c")
+    before: u("photo-1745845979138-be64a85272a5"), // frontal collision
+    after:  u("photo-1764023874797-43f097631e50")  // silver sedan, squared up
   },
   {
     tag: "Recovery",
     title: "Written-off to roadworthy",
-    before: u("photo-1673187139211-1e7ec3dd60ec"),
-    after:  u("photo-1653983476757-54dc3c9a4a7c")
+    before: u("photo-1673187139211-1e7ec3dd60ec"), // on the flatbed
+    after:  u("photo-1653983476757-54dc3c9a4a7c")  // back on the road
   },
   {
-    tag: "4x4",
-    title: "Off-road damage overhaul",
-    before: u("photo-1683446748468-eba61cda9473"),
-    after:  u("photo-1609772168547-d216c44c3f85")
+    tag: "Insurance",
+    title: "Assessed, repaired, returned",
+    before: u("photo-1673187139612-6bf684a74815"), // rear-end damage
+    after:  u("photo-1758793248110-f5c1d35e5a95")  // silver sedan, delivered
   }
 ];
 
