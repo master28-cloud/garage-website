@@ -5,40 +5,85 @@ import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
 
+const DAY = 86_400_000;
+
+function startOfDay(d: Date) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
 export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const endOfToday = new Date(startOfToday);
-  endOfToday.setDate(endOfToday.getDate() + 1);
+  const today = startOfDay(new Date());
+  const tomorrow = new Date(today.getTime() + DAY);
+  const weekAgo = new Date(today.getTime() - 7 * DAY);
+  const twoWeeksAgo = new Date(today.getTime() - 14 * DAY);
+  const scheduleFrom = new Date(today.getTime() - 3 * DAY);
+  const scheduleTo = new Date(today.getTime() + 11 * DAY);
 
   try {
-    const [bookings, totals, todayCount, allTime] = await Promise.all([
-      prisma.booking.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
-      prisma.booking.groupBy({ by: ["status"], _count: { _all: true } }),
-      prisma.booking.count({ where: { preferredDate: { gte: startOfToday, lt: endOfToday } } }),
-      prisma.booking.count()
-    ]);
+    const [recent, totals, allTime, thisWeek, lastWeek, scheduleRows, serviceRows] =
+      await Promise.all([
+        prisma.booking.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+        prisma.booking.groupBy({ by: ["status"], _count: { _all: true } }),
+        prisma.booking.count(),
+        prisma.booking.count({ where: { createdAt: { gte: weekAgo } } }),
+        prisma.booking.count({ where: { createdAt: { gte: twoWeeksAgo, lt: weekAgo } } }),
+        prisma.booking.findMany({
+          where: { preferredDate: { gte: scheduleFrom, lt: scheduleTo } },
+          select: { preferredDate: true, status: true }
+        }),
+        prisma.booking.groupBy({ by: ["service"], _count: { _all: true } })
+      ]);
 
     const by = (s: string) => totals.find((t) => t.status === s)?._count._all ?? 0;
 
+    // Fourteen day workload: three days back for context, then the week ahead.
+    const schedule = Array.from({ length: 14 }, (_, i) => {
+      const date = new Date(scheduleFrom.getTime() + i * DAY);
+      const next = new Date(date.getTime() + DAY);
+      const items = scheduleRows.filter(
+        (r) => r.preferredDate >= date && r.preferredDate < next
+      );
+      return {
+        date: date.toISOString(),
+        count: items.length,
+        isToday: date.getTime() === today.getTime(),
+        isPast: date < today
+      };
+    });
+
+    const serviceMix = serviceRows
+      .map((r) => ({ service: r.service, count: r._count._all }))
+      .sort((a, b) => b.count - a.count);
+
+    const todays = recent
+      .filter((b) => b.preferredDate >= today && b.preferredDate < tomorrow)
+      .sort((a, b) => a.preferredDate.getTime() - b.preferredDate.getTime());
+
     const stats = {
       allTime,
-      today: todayCount,
-      pending:    by("PENDING"),
-      confirmed:  by("CONFIRMED"),
+      today: todays.length,
+      pending: by("PENDING"),
+      confirmed: by("CONFIRMED"),
       inProgress: by("IN_PROGRESS"),
-      completed:  by("COMPLETED"),
-      cancelled:  by("CANCELLED")
+      completed: by("COMPLETED"),
+      cancelled: by("CANCELLED"),
+      thisWeek,
+      lastWeek
     };
 
     return (
       <DashboardClient
         sessionEmail={session.email}
-        initialBookings={JSON.parse(JSON.stringify(bookings))}
+        initialBookings={JSON.parse(JSON.stringify(recent))}
+        todays={JSON.parse(JSON.stringify(todays))}
         stats={stats}
+        schedule={schedule}
+        serviceMix={serviceMix}
       />
     );
   } catch {

@@ -2,21 +2,17 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
-import {
-  Search, LogOut, Phone, MessageCircle, Inbox, CalendarDays,
-  Clock3, CheckCircle2, Wrench, BadgeCheck, SlidersHorizontal
-} from "lucide-react";
+import StatTiles, { type Stats } from "@/components/admin/StatTiles";
+import WorkloadChart, { type Day } from "@/components/admin/WorkloadChart";
+import ServiceMix, { type Mix } from "@/components/admin/ServiceMix";
+import TodayPanel from "@/components/admin/TodayPanel";
+import { Search, Phone, MessageCircle, Inbox, SlidersHorizontal } from "lucide-react";
 
 type Booking = {
   id: string; name: string; phone: string; email: string | null;
   vehicleMake: string; vehicleModel: string; vehicleYear: number | null;
   service: string; preferredDate: string; status: string; notes: string | null;
   createdAt: string;
-};
-
-type Stats = {
-  allTime: number; today: number; pending: number;
-  confirmed: number; inProgress: number; completed: number; cancelled: number;
 };
 
 const STATUSES = ["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const;
@@ -52,8 +48,15 @@ function relativeTime(iso: string) {
 }
 
 export default function DashboardClient({
-  sessionEmail, initialBookings, stats
-}: { sessionEmail: string; initialBookings: Booking[]; stats: Stats }) {
+  sessionEmail, initialBookings, todays, stats, schedule, serviceMix
+}: {
+  sessionEmail: string;
+  initialBookings: Booking[];
+  todays: Booking[];
+  stats: Stats;
+  schedule: Day[];
+  serviceMix: Mix[];
+}) {
   const [bookings, setBookings] = useState(initialBookings);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("ALL");
@@ -89,31 +92,19 @@ export default function DashboardClient({
     if (!res.ok) setBookings(prev);
   }
 
-  const cards = [
-    { label: "Booked for today", value: stats.today,      Icon: CalendarDays, accent: "text-signal",      ring: "ring-orange-200/70",  bg: "bg-orange-50" },
-    { label: "Pending",          value: stats.pending,    Icon: Clock3,       accent: "text-amber-600",   ring: "ring-amber-200/70",   bg: "bg-amber-50" },
-    { label: "Confirmed",        value: stats.confirmed,  Icon: CheckCircle2, accent: "text-blue-600",    ring: "ring-blue-200/70",    bg: "bg-blue-50" },
-    { label: "In progress",      value: stats.inProgress, Icon: Wrench,       accent: "text-orange-600",  ring: "ring-orange-200/70",  bg: "bg-orange-50" },
-    { label: "Completed",        value: stats.completed,  Icon: BadgeCheck,   accent: "text-emerald-600", ring: "ring-emerald-200/70", bg: "bg-emerald-50" },
-    { label: "All time",         value: stats.allTime,    Icon: Inbox,        accent: "text-slate-600",   ring: "ring-slate-200/70",   bg: "bg-slate-100" }
-  ];
-
   return (
     <AdminShell email={sessionEmail}>
       <>
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-6">
-          {cards.map(({ label, value, Icon, accent, ring, bg }) => (
-            <div key={label} className="rounded-2xl border border-black/5 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-              <div className={`inline-grid h-9 w-9 place-items-center rounded-lg ring-1 ${bg} ${ring}`}>
-                <Icon size={17} className={accent} strokeWidth={2} />
-              </div>
-              <div className="mt-4 text-3xl font-bold tracking-tight text-ink">{value}</div>
-              <div className="mt-1 text-xs font-medium text-steel">{label}</div>
-            </div>
-          ))}
+        <StatTiles stats={stats} />
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-3">
+          <div className="lg:col-span-2"><WorkloadChart days={schedule} /></div>
+          <TodayPanel bookings={todays} />
         </div>
 
+        <div className="mt-5 grid gap-5 lg:grid-cols-3">
+          <ServiceMix mix={serviceMix} />
+          <div className="lg:col-span-2">
         {/* Table panel */}
         <div className="mt-7 overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 px-6 py-5">
@@ -246,6 +237,8 @@ export default function DashboardClient({
               </ul>
             </>
           )}
+        </div>
+          </div>
         </div>
       </>
     </AdminShell>
