@@ -1,5 +1,7 @@
 "use client";
-import { Phone, MessageCircle, CalendarCheck } from "lucide-react";
+import { CalendarCheck } from "lucide-react";
+import ContactActions from "./ContactActions";
+import { prettyPhone } from "@/lib/contact";
 
 // Only the fields this panel renders — status is shown on the main table.
 type Booking = {
@@ -9,11 +11,6 @@ type Booking = {
 
 const initials = (n: string) =>
   n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
-
-const waLink = (phone: string, name: string) =>
-  `https://wa.me/${phone.replace(/\D/g, "").replace(/^0/, "254")}?text=${encodeURIComponent(
-    `Hello ${name.split(" ")[0]}, this is AutoPro Garage regarding your booking today.`
-  )}`;
 
 export default function TodayPanel({ bookings }: { bookings: Booking[] }) {
   return (
@@ -46,18 +43,10 @@ export default function TodayPanel({ bookings }: { bookings: Booking[] }) {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-ink">{b.name}</p>
                 <p className="truncate text-xs text-steel">
-                  {b.vehicleMake} {b.vehicleModel} · {b.service.replace(/_/g, " ").toLowerCase()}
+                  {prettyPhone(b.phone)} · {b.vehicleMake} {b.vehicleModel}
                 </p>
               </div>
-              <a href={`tel:${b.phone}`} aria-label={`Call ${b.name}`}
-                 className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-steel transition-colors hover:bg-ink hover:text-white">
-                <Phone size={14} />
-              </a>
-              <a href={waLink(b.phone, b.name)} target="_blank" rel="noopener noreferrer"
-                 aria-label={`WhatsApp ${b.name}`}
-                 className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-steel transition-colors hover:bg-[#25D366] hover:text-white">
-                <MessageCircle size={14} />
-              </a>
+              <ContactActions phone={b.phone} name={b.name} />
             </li>
           ))}
         </ul>

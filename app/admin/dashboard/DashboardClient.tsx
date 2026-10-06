@@ -6,8 +6,10 @@ import StatTiles, { type Stats } from "@/components/admin/StatTiles";
 import WorkloadChart, { type Day } from "@/components/admin/WorkloadChart";
 import ServiceMix, { type Mix } from "@/components/admin/ServiceMix";
 import TodayPanel from "@/components/admin/TodayPanel";
-import { chipStyle, type JobStatusRow } from "@/lib/statuses";
-import { Search, Phone, MessageCircle, Inbox, SlidersHorizontal } from "lucide-react";
+import { chipStyle, dotColor, type JobStatusRow } from "@/lib/statuses";
+import ContactActions from "@/components/admin/ContactActions";
+import { prettyPhone } from "@/lib/contact";
+import { Search, Inbox, SlidersHorizontal } from "lucide-react";
 
 type Booking = {
   id: string; name: string; phone: string; email: string | null;
@@ -21,13 +23,6 @@ export type StatusCount = { id: string; name: string; color: string; count: numb
 
 function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
-}
-
-function waLink(phone: string, name: string) {
-  const digits = phone.replace(/\D/g, "").replace(/^0/, "254");
-  return `https://wa.me/${digits}?text=${encodeURIComponent(
-    `Hello ${name.split(" ")[0]}, this is AutoPro Garage regarding your booking.`
-  )}`;
 }
 
 function relativeTime(iso: string) {
@@ -105,26 +100,42 @@ export default function DashboardClient({
       <>
         <StatTiles stats={stats} />
 
-        {/* Live count per configured stage */}
+        {/* Live count per configured stage. On an opaque panel — these chips
+            previously sat straight on the backdrop photo and were unreadable. */}
         {statusCounts.length > 0 && (
-          <ul className="mt-5 flex flex-wrap gap-2.5">
-            {statusCounts.map((s) => (
-              <li key={s.id}>
-                <button
-                  onClick={() => setFilter(filter === s.id ? "ALL" : s.id)}
-                  aria-pressed={filter === s.id}
-                  className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-semibold transition-all ${
-                    filter === s.id ? "ring-2 ring-white/70" : "hover:brightness-110"
-                  }`}
-                  style={chipStyle(s.color)}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
-                  {s.name}
-                  <span className="tabular-nums opacity-70">{s.count}</span>
-                </button>
+          <div className="mt-5 rounded-2xl border border-black/5 bg-white p-4">
+            <ul className="flex flex-wrap items-center gap-2.5">
+              <li className="pl-1 pr-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-steel">
+                Filter by stage
               </li>
-            ))}
-          </ul>
+              {statusCounts.map((s) => (
+                <li key={s.id}>
+                  <button
+                    onClick={() => setFilter(filter === s.id ? "ALL" : s.id)}
+                    aria-pressed={filter === s.id}
+                    className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-semibold transition-all ${
+                      filter === s.id ? "ring-2 ring-ink ring-offset-1" : "hover:brightness-95"
+                    }`}
+                    style={chipStyle(s.color)}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: dotColor(s.color) }} />
+                    {s.name}
+                    <span className="tabular-nums opacity-80">{s.count}</span>
+                  </button>
+                </li>
+              ))}
+              {filter !== "ALL" && (
+                <li>
+                  <button
+                    onClick={() => setFilter("ALL")}
+                    className="rounded-full px-3 py-2 text-xs font-medium text-steel underline underline-offset-2 hover:text-ink"
+                  >
+                    Clear
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
         )}
 
         <div className="mt-5 grid gap-5 lg:grid-cols-3">
@@ -202,7 +213,7 @@ export default function DashboardClient({
                           </span>
                           <div className="min-w-0">
                             <div className="truncate font-semibold text-ink">{b.name}</div>
-                            <div className="truncate text-xs text-steel">{b.phone} · {relativeTime(b.createdAt)}</div>
+                            <div className="truncate text-xs text-steel">{prettyPhone(b.phone)} · {relativeTime(b.createdAt)}</div>
                           </div>
                         </div>
                       </td>
@@ -218,16 +229,8 @@ export default function DashboardClient({
                         <StatusSelect b={b} statuses={statuses} onChange={updateStatus} />
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <a href={`tel:${b.phone}`} aria-label={`Call ${b.name}`} title="Call"
-                             className="grid h-8 w-8 place-items-center rounded-lg text-steel transition-colors hover:bg-ink hover:text-white">
-                            <Phone size={15} />
-                          </a>
-                          <a href={waLink(b.phone, b.name)} target="_blank" rel="noopener noreferrer"
-                             aria-label={`WhatsApp ${b.name}`} title="WhatsApp"
-                             className="grid h-8 w-8 place-items-center rounded-lg text-steel transition-colors hover:bg-[#25D366] hover:text-white">
-                            <MessageCircle size={15} />
-                          </a>
+                        <div className="flex items-center justify-end">
+                          <ContactActions phone={b.phone} name={b.name} />
                         </div>
                       </td>
                     </tr>
@@ -246,11 +249,11 @@ export default function DashboardClient({
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="truncate font-semibold text-ink">{b.name}</p>
-                            <p className="truncate text-xs text-steel">{b.phone}</p>
+                            <p className="truncate text-xs text-steel">{prettyPhone(b.phone)}</p>
                           </div>
                           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
                                 style={chipStyle(b.status.color)}>
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: b.status.color }} />
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: dotColor(b.status.color) }} />
                             {b.status.name}
                           </span>
                         </div>
@@ -261,15 +264,7 @@ export default function DashboardClient({
                         </dl>
                         <div className="mt-4 flex items-center gap-2">
                           <StatusSelect b={b} statuses={statuses} onChange={updateStatus} />
-                          <a href={`tel:${b.phone}`} aria-label={`Call ${b.name}`}
-                             className="grid h-9 w-9 place-items-center rounded-lg border border-black/10 text-steel">
-                            <Phone size={15} />
-                          </a>
-                          <a href={waLink(b.phone, b.name)} target="_blank" rel="noopener noreferrer"
-                             aria-label={`WhatsApp ${b.name}`}
-                             className="grid h-9 w-9 place-items-center rounded-lg bg-[#25D366] text-white">
-                            <MessageCircle size={15} />
-                          </a>
+                          <ContactActions phone={b.phone} name={b.name} variant="outline" />
                         </div>
                       </div>
                     </div>
@@ -291,7 +286,7 @@ function StatusSelect({
 }: { b: Booking; statuses: JobStatusRow[]; onChange: (id: string, statusId: string) => void }) {
   return (
     <div className="relative inline-flex items-center">
-      <span className="pointer-events-none absolute left-2.5 h-1.5 w-1.5 rounded-full" style={{ background: b.status.color }} />
+      <span className="pointer-events-none absolute left-2.5 h-1.5 w-1.5 rounded-full" style={{ background: dotColor(b.status.color) }} />
       <select
         value={b.statusId}
         onChange={(e) => onChange(b.id, e.target.value)}

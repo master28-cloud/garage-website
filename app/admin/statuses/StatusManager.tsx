@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { chipStyle } from "@/lib/statuses";
+import { chipStyle, dotColor } from "@/lib/statuses";
 import { Plus, Trash2, X, Check, ChevronUp, ChevronDown, Star, Flag } from "lucide-react";
 
 export type StatusRow = {
@@ -165,7 +165,7 @@ export default function StatusManager({ initial }: { initial: StatusRow[] }) {
 
               <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
                     style={chipStyle(r.color)}>
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: r.color }} />
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: dotColor(r.color) }} />
                 {r.name}
               </span>
 
