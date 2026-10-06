@@ -1,9 +1,5 @@
-export const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "254727718981";
-
-export function buildWhatsAppUrl(message: string): string {
-  const encoded = encodeURIComponent(message);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`;
+export function buildWhatsAppUrl(message: string, number: string): string {
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
 export function bookingMessage(opts: {

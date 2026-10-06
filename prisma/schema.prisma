@@ -87,6 +87,62 @@ model AuditLog {
   @@index([actorEmail])
 }
 
+/// Key/value store for editable site content (WhatsApp number, address, hours).
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+/// Uploaded images live in Postgres so the same code path works locally and on
+/// Netlify, whose filesystem is read-only. Served via /api/media/[id] with a
+/// long cache. If the gallery ever grows past ~100 images, move to object
+/// storage and keep only the URL here.
+model MediaAsset {
+  id        String   @id @default(cuid())
+  mimeType  String
+  bytes     Int
+  data      Bytes
+  alt       String?
+  createdAt DateTime @default(now())
+
+  galleryBefore GalleryItem[] @relation("BeforeImage")
+  galleryAfter  GalleryItem[] @relation("AfterImage")
+}
+
+model GalleryItem {
+  id        String   @id @default(cuid())
+  tag       String
+  title     String
+  beforeUrl String?
+  afterUrl  String?
+  beforeId  String?
+  afterId   String?
+  sortOrder Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  before MediaAsset? @relation("BeforeImage", fields: [beforeId], references: [id], onDelete: SetNull)
+  after  MediaAsset? @relation("AfterImage",  fields: [afterId],  references: [id], onDelete: SetNull)
+
+  @@index([sortOrder])
+}
+
+model Partner {
+  id        String   @id @default(cuid())
+  name      String
+  href      String
+  color     String   @default("#5A6069")
+  mark      String   @default("dot")
+  sortOrder Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
 model NewsletterLead {
   id        String   @id @default(cuid())
   email     String   @unique

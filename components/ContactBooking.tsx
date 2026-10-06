@@ -18,7 +18,7 @@ const field =
   "mt-1.5 w-full rounded-xl border border-paper-line bg-white px-4 py-3 text-ink " +
   "placeholder:text-steel-light focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25";
 
-export default function ContactBooking() {
+export default function ContactBooking({ phoneDisplay }: { phoneDisplay: string }) {
   const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState("");
 
@@ -42,7 +42,7 @@ export default function ContactBooking() {
       if (!res.ok || !data) {
         throw new Error(
           data?.error ||
-            "We couldn't reach the booking service. Please call us on +254 727 718 981."
+            `We couldn't reach the booking service. Please call us on ${phoneDisplay}.`
         );
       }
 
@@ -130,7 +130,7 @@ export default function ContactBooking() {
             <h3 className="text-xl font-bold">Visit the workshop</h3>
             <ul className="mt-6 space-y-4 text-[15px]">
               <li className="flex gap-3.5"><MapPin className="shrink-0 text-signal" size={19} /> Enterprise Road, Industrial Area, Nairobi</li>
-              <li className="flex gap-3.5"><Phone  className="shrink-0 text-signal" size={19} /> +254 727 718 981</li>
+              <li className="flex gap-3.5"><Phone  className="shrink-0 text-signal" size={19} /> {phoneDisplay}</li>
               <li className="flex gap-3.5"><Clock  className="shrink-0 text-signal" size={19} /> Monday–Saturday · 7:30am – 6:30pm</li>
             </ul>
           </div>

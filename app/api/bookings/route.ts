@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { buildWhatsAppUrl, bookingMessage } from "@/lib/whatsapp";
+import { getWhatsAppNumber, formatForDisplay } from "@/lib/content";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
@@ -76,12 +77,14 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     console.error("[bookings] database write failed:", e);
+    const fallback = await getWhatsAppNumber();
     return NextResponse.json(
-      { error: "We couldn't save your booking right now. Please call us on +254 727 718 981." },
+      { error: `We couldn't save your booking right now. Please call us on ${formatForDisplay(fallback)}.` },
       { status: 503 }
     );
   }
 
+  const whatsappNumber = await getWhatsAppNumber();
   const reference = `APG-${booking.id.slice(-6).toUpperCase()}`;
   const whatsappUrl = buildWhatsAppUrl(
     bookingMessage({
@@ -92,7 +95,8 @@ export async function POST(req: Request) {
       vehicleModel: booking.vehicleModel,
       service: booking.service.replace(/_/g, " "),
       preferredDate: booking.preferredDate.toISOString().slice(0, 10)
-    })
+    }),
+    whatsappNumber
   );
 
   return NextResponse.json({ ok: true, reference, whatsappUrl }, { status: 201 });

@@ -5,7 +5,12 @@ import { jwtVerify } from "jose";
 const SECRET = () => new TextEncoder().encode(process.env.JWT_SECRET || "dev-secret-change-me");
 
 export const config = {
-  matcher: ["/admin/dashboard/:path*"]
+  matcher: [
+    "/admin/dashboard/:path*",
+    "/admin/gallery/:path*",
+    "/admin/partners/:path*",
+    "/admin/settings/:path*"
+  ]
 };
 
 export async function middleware(req: NextRequest) {

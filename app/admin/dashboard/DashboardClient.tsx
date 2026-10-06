@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminShell from "@/components/admin/AdminShell";
 import {
   Search, LogOut, Phone, MessageCircle, Inbox, CalendarDays,
   Clock3, CheckCircle2, Wrench, BadgeCheck, SlidersHorizontal
@@ -98,27 +99,8 @@ export default function DashboardClient({
   ];
 
   return (
-    <div className="min-h-screen bg-[#F6F5F3]">
-      {/* Header */}
-      <header className="bg-ink">
-        <div className="container-x flex items-center justify-between gap-4 py-5">
-          <div className="flex items-center gap-3.5">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-signal text-base font-bold text-white">A</span>
-            <div>
-              <h1 className="text-lg font-bold leading-tight text-white">AutoPro Operations</h1>
-              <p className="text-xs text-white/55">{sessionEmail}</p>
-            </div>
-          </div>
-          <button
-            onClick={logout}
-            className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
-          >
-            <LogOut size={15} /> Sign out
-          </button>
-        </div>
-      </header>
-
-      <div className="container-x py-9">
+    <AdminShell email={sessionEmail}>
+      <>
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-6">
           {cards.map(({ label, value, Icon, accent, ring, bg }) => (
@@ -265,8 +247,8 @@ export default function DashboardClient({
             </>
           )}
         </div>
-      </div>
-    </div>
+      </>
+    </AdminShell>
   );
 }
 

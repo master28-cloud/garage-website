@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
+import { getWhatsAppNumber } from "@/lib/content";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const poppins = Poppins({
@@ -57,13 +58,13 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.ico" }
 };
 
-const jsonLd = {
+const buildJsonLd = (telephone: string) => ({
   "@context": "https://schema.org",
   "@type": "AutoRepair",
   name: "AutoPro Garage",
   image: `${siteUrl}/og.jpg`,
   url: siteUrl,
-  telephone: "+254727718981",
+  telephone,
   priceRange: "KSh",
   address: {
     "@type": "PostalAddress",
@@ -85,9 +86,10 @@ const jsonLd = {
     "https://tiktok.com/@autoprogarage",
     "https://linkedin.com/company/autoprogarage"
   ]
-};
+});
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const jsonLd = buildJsonLd(`+${await getWhatsAppNumber()}`);
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
       <body>

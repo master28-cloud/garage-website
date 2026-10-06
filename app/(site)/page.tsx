@@ -7,8 +7,11 @@ import Hierarchy from "@/components/Hierarchy";
 import Testimonials from "@/components/Testimonials";
 import ContactBooking from "@/components/ContactBooking";
 import Reveal from "@/components/Reveal";
+import { getWhatsAppNumber, formatForDisplay } from "@/lib/content";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const phoneDisplay = formatForDisplay(await getWhatsAppNumber());
+
   return (
     <>
       <Hero />
@@ -18,7 +21,7 @@ export default function HomePage() {
       <Reveal><Stats /></Reveal>
       <Reveal><Hierarchy /></Reveal>
       <Reveal><Testimonials /></Reveal>
-      <Reveal><ContactBooking /></Reveal>
+      <Reveal><ContactBooking phoneDisplay={phoneDisplay} /></Reveal>
     </>
   );
 }

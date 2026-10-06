@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Facebook, Instagram, Linkedin } from "lucide-react";
 import PartnerLogos from "./PartnerLogos";
+import { getWhatsAppNumber, formatForDisplay } from "@/lib/content";
 
 // Every href is absolute. A bare "#services" resolves against whatever page
 // you are already on, so from /privacy it went nowhere.
@@ -26,7 +27,8 @@ const links = {
   ]
 };
 
-export default function Footer() {
+export default async function Footer() {
+  const phoneDisplay = formatForDisplay(await getWhatsAppNumber());
   return (
     <footer className="bg-ink text-white">
       {/* Partner wall on a light band so the brand colours read properly */}
@@ -90,7 +92,7 @@ export default function Footer() {
 
         <div className="mt-14 flex flex-col gap-3 border-t border-white/10 pt-7 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} AutoPro Garage. All rights reserved.</p>
-          <p>Enterprise Road, Nairobi · +254 727 718 981</p>
+          <p>Enterprise Road, Nairobi · {phoneDisplay}</p>
         </div>
       </div>
     </footer>
