@@ -1,9 +1,10 @@
 "use client";
 import { Phone, MessageCircle, CalendarCheck } from "lucide-react";
 
+// Only the fields this panel renders — status is shown on the main table.
 type Booking = {
   id: string; name: string; phone: string; vehicleMake: string;
-  vehicleModel: string; service: string; status: string;
+  vehicleModel: string; service: string;
 };
 
 const initials = (n: string) =>

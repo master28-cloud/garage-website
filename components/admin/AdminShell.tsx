@@ -2,10 +2,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, LayoutList, Images, Handshake, Settings, ExternalLink } from "lucide-react";
+import { LogOut, LayoutList, Images, Handshake, Settings, ExternalLink, ListChecks } from "lucide-react";
 
 const TABS = [
   { href: "/admin/dashboard", label: "Bookings", Icon: LayoutList },
+  { href: "/admin/statuses",  label: "Stages",   Icon: ListChecks },
   { href: "/admin/gallery",   label: "Gallery",  Icon: Images },
   { href: "/admin/partners",  label: "Partners", Icon: Handshake },
   { href: "/admin/settings",  label: "Settings", Icon: Settings }

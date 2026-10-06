@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getStatuses } from "@/lib/statuses";
 import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -25,32 +26,46 @@ export default async function DashboardPage() {
   const scheduleTo = new Date(today.getTime() + 11 * DAY);
 
   try {
-    const [recent, totals, allTime, thisWeek, lastWeek, scheduleRows, serviceRows] =
+    const [statuses, recent, byStatus, allTime, thisWeek, lastWeek, scheduleRows, serviceRows] =
       await Promise.all([
-        prisma.booking.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
-        prisma.booking.groupBy({ by: ["status"], _count: { _all: true } }),
+        getStatuses(),
+        prisma.booking.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 100,
+          include: { status: true }
+        }),
+        prisma.booking.groupBy({ by: ["statusId"], _count: { _all: true } }),
         prisma.booking.count(),
         prisma.booking.count({ where: { createdAt: { gte: weekAgo } } }),
         prisma.booking.count({ where: { createdAt: { gte: twoWeeksAgo, lt: weekAgo } } }),
         prisma.booking.findMany({
           where: { preferredDate: { gte: scheduleFrom, lt: scheduleTo } },
-          select: { preferredDate: true, status: true }
+          select: { preferredDate: true }
         }),
         prisma.booking.groupBy({ by: ["service"], _count: { _all: true } })
       ]);
 
-    const by = (s: string) => totals.find((t) => t.status === s)?._count._all ?? 0;
+    const countFor = (id: string) =>
+      byStatus.find((r) => r.statusId === id)?._count._all ?? 0;
 
-    // Fourteen day workload: three days back for context, then the week ahead.
+    // Counts follow whatever stages exist, rather than four fixed names.
+    const statusCounts = statuses.map((s) => ({
+      id: s.id, name: s.name, color: s.color,
+      count: countFor(s.id), isTerminal: s.isTerminal
+    }));
+
+    const open = statusCounts
+      .filter((s) => !s.isTerminal)
+      .reduce((n, s) => n + s.count, 0);
+
+    const firstOpen = statusCounts.find((s) => !s.isTerminal);
+
     const schedule = Array.from({ length: 14 }, (_, i) => {
       const date = new Date(scheduleFrom.getTime() + i * DAY);
       const next = new Date(date.getTime() + DAY);
-      const items = scheduleRows.filter(
-        (r) => r.preferredDate >= date && r.preferredDate < next
-      );
       return {
         date: date.toISOString(),
-        count: items.length,
+        count: scheduleRows.filter((r) => r.preferredDate >= date && r.preferredDate < next).length,
         isToday: date.getTime() === today.getTime(),
         isPast: date < today
       };
@@ -67,11 +82,9 @@ export default async function DashboardPage() {
     const stats = {
       allTime,
       today: todays.length,
-      pending: by("PENDING"),
-      confirmed: by("CONFIRMED"),
-      inProgress: by("IN_PROGRESS"),
-      completed: by("COMPLETED"),
-      cancelled: by("CANCELLED"),
+      open,
+      firstOpenName: firstOpen?.name ?? "Open",
+      firstOpenCount: firstOpen?.count ?? 0,
       thisWeek,
       lastWeek
     };
@@ -81,6 +94,8 @@ export default async function DashboardPage() {
         sessionEmail={session.email}
         initialBookings={JSON.parse(JSON.stringify(recent))}
         todays={JSON.parse(JSON.stringify(todays))}
+        statuses={statuses}
+        statusCounts={statusCounts}
         stats={stats}
         schedule={schedule}
         serviceMix={serviceMix}

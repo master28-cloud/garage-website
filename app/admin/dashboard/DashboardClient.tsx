@@ -6,24 +6,18 @@ import StatTiles, { type Stats } from "@/components/admin/StatTiles";
 import WorkloadChart, { type Day } from "@/components/admin/WorkloadChart";
 import ServiceMix, { type Mix } from "@/components/admin/ServiceMix";
 import TodayPanel from "@/components/admin/TodayPanel";
+import { chipStyle, type JobStatusRow } from "@/lib/statuses";
 import { Search, Phone, MessageCircle, Inbox, SlidersHorizontal } from "lucide-react";
 
 type Booking = {
   id: string; name: string; phone: string; email: string | null;
   vehicleMake: string; vehicleModel: string; vehicleYear: number | null;
-  service: string; preferredDate: string; status: string; notes: string | null;
-  createdAt: string;
+  service: string; preferredDate: string; statusId: string;
+  status: { id: string; name: string; color: string };
+  notes: string | null; createdAt: string;
 };
 
-const STATUSES = ["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const;
-
-const STATUS_STYLE: Record<string, { dot: string; chip: string; label: string }> = {
-  PENDING:     { dot: "bg-amber-500",  chip: "bg-amber-50 text-amber-700 ring-amber-200",   label: "Pending" },
-  CONFIRMED:   { dot: "bg-blue-500",   chip: "bg-blue-50 text-blue-700 ring-blue-200",      label: "Confirmed" },
-  IN_PROGRESS: { dot: "bg-signal",     chip: "bg-orange-50 text-orange-700 ring-orange-200",label: "In progress" },
-  COMPLETED:   { dot: "bg-emerald-500",chip: "bg-emerald-50 text-emerald-700 ring-emerald-200", label: "Completed" },
-  CANCELLED:   { dot: "bg-slate-400",  chip: "bg-slate-100 text-slate-600 ring-slate-200",  label: "Cancelled" }
-};
+export type StatusCount = { id: string; name: string; color: string; count: number; isTerminal: boolean };
 
 function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
@@ -48,11 +42,13 @@ function relativeTime(iso: string) {
 }
 
 export default function DashboardClient({
-  sessionEmail, initialBookings, todays, stats, schedule, serviceMix
+  sessionEmail, initialBookings, todays, statuses, statusCounts, stats, schedule, serviceMix
 }: {
   sessionEmail: string;
   initialBookings: Booking[];
   todays: Booking[];
+  statuses: JobStatusRow[];
+  statusCounts: StatusCount[];
   stats: Stats;
   schedule: Day[];
   serviceMix: Mix[];
@@ -61,12 +57,13 @@ export default function DashboardClient({
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("ALL");
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const filtered = useMemo(
     () =>
       bookings.filter((b) => {
-        if (filter !== "ALL" && b.status !== filter) return false;
+        if (filter !== "ALL" && b.statusId !== filter) return false;
         if (!q.trim()) return true;
         const hay = `${b.name} ${b.phone} ${b.email ?? ""} ${b.vehicleMake} ${b.vehicleModel} ${b.service}`;
         return hay.toLowerCase().includes(q.toLowerCase());
@@ -74,28 +71,61 @@ export default function DashboardClient({
     [bookings, q, filter]
   );
 
-  async function logout() {
-    await fetch("/api/admin/login", { method: "DELETE" });
-    router.replace("/admin/login");
-  }
-
-  async function updateStatus(id: string, status: string) {
+  async function updateStatus(id: string, statusId: string) {
     const prev = bookings;
+    const next = statuses.find((s) => s.id === statusId);
+    if (!next) return;
+
     setBusy(id);
-    setBookings((b) => b.map((x) => (x.id === id ? { ...x, status } : x)));
+    setError("");
+    setBookings((b) =>
+      b.map((x) =>
+        x.id === id ? { ...x, statusId, status: { id: next.id, name: next.name, color: next.color } } : x
+      )
+    );
+
     const res = await fetch("/api/admin/bookings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status })
+      body: JSON.stringify({ id, statusId })
     });
     setBusy(null);
-    if (!res.ok) setBookings(prev);
+
+    if (!res.ok) {
+      setBookings(prev);
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "Could not update that booking.");
+      return;
+    }
+    router.refresh();
   }
 
   return (
     <AdminShell email={sessionEmail}>
       <>
         <StatTiles stats={stats} />
+
+        {/* Live count per configured stage */}
+        {statusCounts.length > 0 && (
+          <ul className="mt-5 flex flex-wrap gap-2.5">
+            {statusCounts.map((s) => (
+              <li key={s.id}>
+                <button
+                  onClick={() => setFilter(filter === s.id ? "ALL" : s.id)}
+                  aria-pressed={filter === s.id}
+                  className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-semibold transition-all ${
+                    filter === s.id ? "ring-2 ring-white/70" : "hover:brightness-110"
+                  }`}
+                  style={chipStyle(s.color)}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
+                  {s.name}
+                  <span className="tabular-nums opacity-70">{s.count}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <div className="mt-5 grid gap-5 lg:grid-cols-3">
           <div className="lg:col-span-2"><WorkloadChart days={schedule} /></div>
@@ -105,8 +135,9 @@ export default function DashboardClient({
         <div className="mt-5 grid gap-5 lg:grid-cols-3">
           <ServiceMix mix={serviceMix} />
           <div className="lg:col-span-2">
+
         {/* Table panel */}
-        <div className="mt-7 overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 px-6 py-5">
             <div>
               <h2 className="text-base font-bold text-ink">Bookings</h2>
@@ -122,7 +153,7 @@ export default function DashboardClient({
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Search name, phone, vehicle…"
-                  className="w-64 rounded-xl border border-black/10 py-2.5 pl-10 pr-3 text-sm text-ink placeholder:text-steel-light focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/20"
+                  className="w-56 rounded-xl border border-black/10 py-2.5 pl-10 pr-3 text-sm text-ink placeholder:text-steel-light focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/20"
                 />
               </div>
               <div className="relative">
@@ -130,21 +161,26 @@ export default function DashboardClient({
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  aria-label="Filter by status"
+                  aria-label="Filter by stage"
                   className="appearance-none rounded-xl border border-black/10 py-2.5 pl-10 pr-9 text-sm text-ink focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/20"
                 >
-                  <option value="ALL">All statuses</option>
-                  {STATUSES.map((s) => <option key={s} value={s}>{STATUS_STYLE[s].label}</option>)}
+                  <option value="ALL">All stages</option>
+                  {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
             </div>
           </div>
 
+          {error && (
+            <p role="alert" className="border-b border-black/5 bg-red-50 px-6 py-3 text-sm font-medium text-red-700">
+              {error}
+            </p>
+          )}
+
           {filtered.length === 0 ? (
             <EmptyState hasAny={bookings.length > 0} onClear={() => { setQ(""); setFilter("ALL"); }} />
           ) : (
             <>
-              {/* Desktop table */}
               <table className="hidden w-full text-sm lg:table">
                 <thead>
                   <tr className="border-b border-black/5 text-left text-[11px] uppercase tracking-wider text-steel">
@@ -152,7 +188,7 @@ export default function DashboardClient({
                     <th className="px-4 py-3 font-semibold">Vehicle</th>
                     <th className="px-4 py-3 font-semibold">Service</th>
                     <th className="px-4 py-3 font-semibold">Scheduled</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold">Stage</th>
                     <th className="px-6 py-3 text-right font-semibold">Contact</th>
                   </tr>
                 </thead>
@@ -178,7 +214,9 @@ export default function DashboardClient({
                       <td className="px-4 py-4 text-ink">
                         {new Date(b.preferredDate).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
                       </td>
-                      <td className="px-4 py-4"><StatusSelect b={b} onChange={updateStatus} /></td>
+                      <td className="px-4 py-4">
+                        <StatusSelect b={b} statuses={statuses} onChange={updateStatus} />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-1.5">
                           <a href={`tel:${b.phone}`} aria-label={`Call ${b.name}`} title="Call"
@@ -197,7 +235,6 @@ export default function DashboardClient({
                 </tbody>
               </table>
 
-              {/* Mobile cards */}
               <ul className="divide-y divide-black/5 lg:hidden">
                 {filtered.map((b) => (
                   <li key={b.id} className={`p-5 ${busy === b.id ? "opacity-50" : ""}`}>
@@ -211,7 +248,11 @@ export default function DashboardClient({
                             <p className="truncate font-semibold text-ink">{b.name}</p>
                             <p className="truncate text-xs text-steel">{b.phone}</p>
                           </div>
-                          <StatusChip status={b.status} />
+                          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                                style={chipStyle(b.status.color)}>
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: b.status.color }} />
+                            {b.status.name}
+                          </span>
                         </div>
                         <dl className="mt-3 space-y-1 text-sm">
                           <div className="flex gap-2"><dt className="text-steel">Vehicle</dt><dd className="text-ink">{b.vehicleMake} {b.vehicleModel}</dd></div>
@@ -219,7 +260,7 @@ export default function DashboardClient({
                           <div className="flex gap-2"><dt className="text-steel">Date</dt><dd className="text-ink">{new Date(b.preferredDate).toLocaleDateString()}</dd></div>
                         </dl>
                         <div className="mt-4 flex items-center gap-2">
-                          <StatusSelect b={b} onChange={updateStatus} />
+                          <StatusSelect b={b} statuses={statuses} onChange={updateStatus} />
                           <a href={`tel:${b.phone}`} aria-label={`Call ${b.name}`}
                              className="grid h-9 w-9 place-items-center rounded-lg border border-black/10 text-steel">
                             <Phone size={15} />
@@ -245,28 +286,20 @@ export default function DashboardClient({
   );
 }
 
-function StatusChip({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] ?? STATUS_STYLE.PENDING;
-  return (
-    <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${s.chip}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-      {s.label}
-    </span>
-  );
-}
-
-function StatusSelect({ b, onChange }: { b: Booking; onChange: (id: string, s: string) => void }) {
-  const s = STATUS_STYLE[b.status] ?? STATUS_STYLE.PENDING;
+function StatusSelect({
+  b, statuses, onChange
+}: { b: Booking; statuses: JobStatusRow[]; onChange: (id: string, statusId: string) => void }) {
   return (
     <div className="relative inline-flex items-center">
-      <span className={`pointer-events-none absolute left-2.5 h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      <span className="pointer-events-none absolute left-2.5 h-1.5 w-1.5 rounded-full" style={{ background: b.status.color }} />
       <select
-        value={b.status}
+        value={b.statusId}
         onChange={(e) => onChange(b.id, e.target.value)}
-        aria-label={`Status for ${b.name}`}
-        className={`appearance-none rounded-full py-1.5 pl-6 pr-7 text-xs font-semibold ring-1 ${s.chip} cursor-pointer focus:outline-none focus:ring-2 focus:ring-signal/40`}
+        aria-label={`Stage for ${b.name}`}
+        className="cursor-pointer appearance-none rounded-full py-1.5 pl-6 pr-7 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-signal/40"
+        style={chipStyle(b.status.color)}
       >
-        {STATUSES.map((v) => <option key={v} value={v}>{STATUS_STYLE[v].label}</option>)}
+        {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
     </div>
   );
@@ -281,7 +314,7 @@ function EmptyState({ hasAny, onClear }: { hasAny: boolean; onClear: () => void 
       {hasAny ? (
         <>
           <p className="mt-5 font-semibold text-ink">No bookings match your filters</p>
-          <p className="mt-1.5 text-sm text-steel">Try a different search term or status.</p>
+          <p className="mt-1.5 text-sm text-steel">Try a different search term or stage.</p>
           <button onClick={onClear} className="mt-5 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-ink-soft">
             Clear filters
           </button>

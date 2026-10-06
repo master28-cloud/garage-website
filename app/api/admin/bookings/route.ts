@@ -14,16 +14,20 @@ async function requireAdmin() {
 export async function GET() {
   const s = await requireAdmin();
   if (!s) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const bookings = await prisma.booking.findMany({
     orderBy: { createdAt: "desc" },
-    take: 200
+    take: 200,
+    include: { status: true }
   });
   return NextResponse.json({ bookings });
 }
 
+// Statuses are rows now, so the valid set is whatever the workshop has
+// configured — it has to be checked against the table, not a literal union.
 const patchSchema = z.object({
   id: z.string().cuid(),
-  status: z.enum(["PENDING","CONFIRMED","IN_PROGRESS","COMPLETED","CANCELLED"])
+  statusId: z.string().cuid()
 });
 
 export async function PATCH(req: Request) {
@@ -35,20 +39,33 @@ export async function PATCH(req: Request) {
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  const booking = await prisma.booking.update({
-    where: { id: parsed.data.id },
-    data: { status: parsed.data.status }
+  const status = await prisma.jobStatus.findUnique({
+    where: { id: parsed.data.statusId },
+    select: { id: true, name: true }
   });
+  if (!status) {
+    return NextResponse.json({ error: "That status no longer exists." }, { status: 400 });
+  }
 
-  await prisma.auditLog.create({
-    data: {
-      actorEmail: s.email,
-      action: "booking.status_change",
-      entity: "Booking",
-      entityId: booking.id,
-      meta: { to: parsed.data.status }
-    }
-  });
+  try {
+    const booking = await prisma.booking.update({
+      where: { id: parsed.data.id },
+      data: { statusId: status.id },
+      include: { status: true }
+    });
 
-  return NextResponse.json({ ok: true, booking });
+    await prisma.auditLog.create({
+      data: {
+        actorEmail: s.email,
+        action: "booking.status_change",
+        entity: "Booking",
+        entityId: booking.id,
+        meta: { to: status.name, statusId: status.id }
+      }
+    });
+
+    return NextResponse.json({ ok: true, booking });
+  } catch {
+    return NextResponse.json({ error: "Could not update the booking." }, { status: 503 });
+  }
 }

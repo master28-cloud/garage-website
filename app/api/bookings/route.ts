@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { buildWhatsAppUrl, bookingMessage } from "@/lib/whatsapp";
 import { getWhatsAppNumber, formatForDisplay } from "@/lib/content";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
+import { getDefaultStatusId } from "@/lib/statuses";
 
 export const runtime = "nodejs";
 
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
         service: d.service,
         preferredDate: new Date(d.preferredDate),
         notes: d.notes?.trim() || null,
-        status: "PENDING",
+        statusId: await getDefaultStatusId(),
         consentPrivacy: true,
         consentMarket: !!d.consentMarket,
         ipHash: hashIp(ip),

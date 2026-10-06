@@ -1,9 +1,13 @@
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export type Stats = {
-  allTime: number; today: number; pending: number; confirmed: number;
-  inProgress: number; completed: number; cancelled: number;
-  thisWeek: number; lastWeek: number;
+  allTime: number;
+  today: number;
+  open: number;
+  firstOpenName: string;
+  firstOpenCount: number;
+  thisWeek: number;
+  lastWeek: number;
 };
 
 function Delta({ now, before }: { now: number; before: number }) {
@@ -35,8 +39,6 @@ function Delta({ now, before }: { now: number; before: number }) {
 }
 
 export default function StatTiles({ stats }: { stats: Stats }) {
-  const open = stats.pending + stats.confirmed + stats.inProgress;
-
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       {/* Primary: demand this week, with the comparison that gives it meaning */}
@@ -64,8 +66,8 @@ export default function StatTiles({ stats }: { stats: Stats }) {
       {/* Secondary tiles */}
       <div className="grid grid-cols-2 gap-4 lg:col-span-2 lg:grid-cols-4">
         <Tile label="In today" value={stats.today} hint="scheduled" accent />
-        <Tile label="Open jobs" value={open} hint="not yet completed" />
-        <Tile label="Awaiting confirmation" value={stats.pending} hint="needs a reply" warn={stats.pending > 0} />
+        <Tile label="Open jobs" value={stats.open} hint="not yet closed out" />
+        <Tile label={stats.firstOpenName} value={stats.firstOpenCount} hint="first stage" warn={stats.firstOpenCount > 0} />
         <Tile label="All time" value={stats.allTime} hint="bookings received" />
       </div>
     </div>

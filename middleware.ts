@@ -7,6 +7,7 @@ const SECRET = () => new TextEncoder().encode(process.env.JWT_SECRET || "dev-sec
 export const config = {
   matcher: [
     "/admin/dashboard/:path*",
+    "/admin/statuses/:path*",
     "/admin/gallery/:path*",
     "/admin/partners/:path*",
     "/admin/settings/:path*"

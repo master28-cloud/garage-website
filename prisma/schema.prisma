@@ -13,14 +13,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
 enum ServiceType {
   ENGINE_DIAGNOSTICS
   PANEL_BEATING
@@ -49,7 +41,8 @@ model Booking {
   service        ServiceType
   preferredDate  DateTime
   notes          String?
-  status         BookingStatus @default(PENDING)
+  statusId       String
+  status         JobStatus     @relation(fields: [statusId], references: [id], onDelete: Restrict)
   consentPrivacy Boolean       @default(false)
   consentMarket  Boolean       @default(false)
   ipHash         String?
@@ -58,8 +51,26 @@ model Booking {
   updatedAt      DateTime      @updatedAt
 
   @@index([createdAt])
-  @@index([status])
+  @@index([statusId])
   @@index([phone])
+}
+
+/// Workshop stages, editable from /admin/statuses so the list can match how
+/// the bays actually run rather than a fixed set chosen up front.
+model JobStatus {
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  color      String   @default("#5A6069")
+  sortOrder  Int      @default(0)
+  isDefault  Boolean  @default(false)
+  isTerminal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@index([sortOrder])
 }
 
 model AdminUser {
