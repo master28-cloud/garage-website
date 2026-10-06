@@ -12,25 +12,12 @@ const TABS = [
 ];
 
 /**
- * Golf GTI Mk7.5 behind the whole admin area, fixed so it does not travel
- * with the scroll. This is a tool people read numbers off for hours, so the
- * photograph is pushed right back — heavily darkened, desaturated and grained
- * — and every panel keeps an opaque surface. The car is atmosphere between
- * the cards, never underneath the data.
+ * Mk7 Golf on the coast, kept clearly visible behind the admin area.
+ * The photograph carries only a light wash — enough for the header text to
+ * pass contrast — and keeps its own colour. Readability is bought back by
+ * the panels instead: every card is fully opaque with a lifted shadow, so
+ * they read as sheets floating over the scene rather than tinted glass.
  */
-
-const GRAIN =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
-       <filter id='n'>
-         <feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/>
-         <feColorMatrix type='saturate' values='0'/>
-       </filter>
-       <rect width='160' height='160' filter='url(#n)' opacity='0.5'/>
-     </svg>`
-  );
-
 export default function AdminShell({
   email, children
 }: { email: string; children: React.ReactNode }) {
@@ -44,47 +31,42 @@ export default function AdminShell({
 
   return (
     <div className="relative min-h-screen bg-ink">
-      {/* ---- fixed backdrop ---- */}
+      {/* ---- backdrop: fixed, so it does not travel with the scroll ---- */}
       <div aria-hidden="true" className="fixed inset-0 z-0">
         <Image
-          src="https://images.pexels.com/photos/20809165/pexels-photo-20809165.jpeg?auto=compress&cs=tinysrgb&w=2400"
+          src="https://images.pexels.com/photos/9470906/pexels-photo-9470906.jpeg?auto=compress&cs=tinysrgb&w=2400"
           alt=""
           fill
           priority
           sizes="100vw"
           className="object-cover object-center"
         />
-        {/* desaturate and sink it behind the interface */}
-        <div className="absolute inset-0 bg-ink/80" />
-        <div
-          className="absolute inset-0 mix-blend-saturation"
-          style={{ background: "#808080", opacity: 0.75 }}
-        />
-        {/* warm the top-left so the header has some life */}
-        <div
-          className="absolute inset-0 mix-blend-soft-light"
-          style={{ background: "radial-gradient(60% 70% at 18% 8%,#FF5A1F 0%,transparent 70%)", opacity: 0.45 }}
-        />
-        {/* settle toward solid ink down the page, so long tables stay calm */}
+
+        {/* light wash only — the car and the sea stay legible */}
+        <div className="absolute inset-0 bg-ink/30" />
+
+        {/* a touch more weight at the very top so header text clears contrast */}
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(to bottom,rgba(12,13,14,.35) 0%,rgba(12,13,14,.82) 45%,#0C0D0E 100%)" }}
+          style={{ background: "linear-gradient(to bottom,rgba(12,13,14,.72) 0%,rgba(12,13,14,.28) 22%,transparent 45%)" }}
         />
+
+        {/* warm the horizon a little toward the brand hue */}
         <div
-          className="absolute inset-0 opacity-[0.10] mix-blend-overlay"
-          style={{ backgroundImage: `url("${GRAIN}")`, backgroundSize: "160px 160px" }}
+          className="absolute inset-0 mix-blend-soft-light"
+          style={{ background: "radial-gradient(70% 55% at 20% 12%,#FF5A1F 0%,transparent 72%)", opacity: 0.35 }}
         />
       </div>
 
       {/* ---- interface ---- */}
       <div className="relative z-10">
-        <header className="border-b border-white/10 bg-ink/55 backdrop-blur-md">
+        <header className="border-b border-white/15 bg-ink/45 backdrop-blur-md">
           <div className="container-x flex items-center justify-between gap-4 py-5">
             <div className="flex items-center gap-3.5">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-signal text-base font-bold text-white">A</span>
               <div>
-                <h1 className="text-lg font-bold leading-tight text-white">AutoPro Operations</h1>
-                <p className="text-xs text-white/55">{email}</p>
+                <h1 className="text-lg font-bold leading-tight text-white drop-shadow-sm">AutoPro Operations</h1>
+                <p className="text-xs text-white/70">{email}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -92,13 +74,13 @@ export default function AdminShell({
                 href="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden items-center gap-2 rounded-full border border-white/25 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10 sm:inline-flex"
+                className="hidden items-center gap-2 rounded-full border border-white/30 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/15 sm:inline-flex"
               >
                 View site <ExternalLink size={14} />
               </a>
               <button
                 onClick={logout}
-                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/5 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/15"
               >
                 <LogOut size={15} /> Sign out
               </button>
@@ -116,7 +98,7 @@ export default function AdminShell({
                   className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
                     active
                       ? "border-signal text-white"
-                      : "border-transparent text-white/55 hover:text-white"
+                      : "border-transparent text-white/70 hover:text-white"
                   }`}
                 >
                   <Icon size={15} /> {label}
@@ -126,7 +108,10 @@ export default function AdminShell({
           </nav>
         </header>
 
-        <div className="container-x py-9">{children}</div>
+        {/* [&_...] lifts every panel off the photograph without touching each component */}
+        <div className="container-x py-9 [&_.rounded-2xl]:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.45)] [&_table]:bg-white">
+          {children}
+        </div>
       </div>
     </div>
   );
