@@ -131,7 +131,14 @@ export default function ContactBooking({ phoneDisplay }: { phoneDisplay: string 
             <ul className="mt-6 space-y-4 text-[15px]">
               <li className="flex gap-3.5"><MapPin className="shrink-0 text-signal" size={19} /> Enterprise Road, Industrial Area, Nairobi</li>
               <li className="flex gap-3.5"><Phone  className="shrink-0 text-signal" size={19} /> {phoneDisplay}</li>
-              <li className="flex gap-3.5"><Clock  className="shrink-0 text-signal" size={19} /> Monday–Saturday · 7:30am – 6:30pm</li>
+              <li className="flex gap-3.5">
+                <Clock className="mt-0.5 shrink-0 text-signal" size={19} />
+                <span>
+                  Monday–Friday · 7:30am – 6:30pm
+                  <br />
+                  Saturday · 8:30am – 5:00pm
+                </span>
+              </li>
             </ul>
           </div>
 
