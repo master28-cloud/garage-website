@@ -42,8 +42,8 @@ export default function SettingsForm({ initial }: { initial: string }) {
 
   return (
     <div className="max-w-2xl">
-      <h2 className="text-2xl font-bold text-ink">Site settings</h2>
-      <p className="mt-1.5 text-sm text-steel">
+      <h2 className="text-2xl font-bold text-white">Site settings</h2>
+      <p className="mt-1.5 text-sm text-white/60">
         Changes go live on the public site the moment you save.
       </p>
 

@@ -88,8 +88,8 @@ export default function PartnersManager({ initial }: { initial: Partner[] }) {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink">Partners</h2>
-          <p className="mt-1.5 max-w-xl text-sm text-steel">
+          <h2 className="text-2xl font-bold text-white">Partners</h2>
+          <p className="mt-1.5 max-w-xl text-sm text-white/60">
             Shown in the footer, each linking to the partner&apos;s site. Listing a company
             here asserts a commercial relationship — only add partners who have agreed.
           </p>

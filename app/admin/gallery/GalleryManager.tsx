@@ -77,8 +77,8 @@ export default function GalleryManager({ initial }: { initial: Item[] }) {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink">Before &amp; after gallery</h2>
-          <p className="mt-1.5 max-w-xl text-sm text-steel">
+          <h2 className="text-2xl font-bold text-white">Before &amp; after gallery</h2>
+          <p className="mt-1.5 max-w-xl text-sm text-white/60">
             Upload your intake and handover photos. Changes appear on the public site
             immediately. JPG, PNG or WebP, up to {MAX_MB}MB each.
           </p>
