@@ -32,8 +32,8 @@ export default function Hero() {
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <Link href="#contact" className="btn btn-solid">Book a Service</Link>
-            <Link href="#gallery" className="btn btn-outline">View Our Work</Link>
+            <Link href="/#contact" className="btn btn-solid">Book a Service</Link>
+            <Link href="/our-work" className="btn btn-outline">View Our Work</Link>
           </div>
         </div>
       </div>

@@ -2,18 +2,22 @@ import Link from "next/link";
 import { Facebook, Instagram, Linkedin } from "lucide-react";
 import PartnerLogos from "./PartnerLogos";
 
+// Every href is absolute. A bare "#services" resolves against whatever page
+// you are already on, so from /privacy it went nowhere.
 const links = {
   Company: [
-    { href: "#about",       label: "About" },
-    { href: "#team",        label: "Leadership" },
-    { href: "#gallery",     label: "Our Work" },
-    { href: "/sitemap.xml", label: "Sitemap" }
+    { href: "/about",            label: "About" },
+    { href: "/about#team",       label: "Leadership" },
+    { href: "/our-work",         label: "Our Work" },
+    { href: "/#contact",         label: "Book a Service" },
+    { href: "/sitemap.xml",      label: "Sitemap" }
   ],
   Services: [
-    { href: "#services", label: "Engine Diagnostics" },
-    { href: "#services", label: "Panel Beating" },
-    { href: "#services", label: "Wheel Alignment" },
-    { href: "#services", label: "Insurance Repairs" }
+    { href: "/services#engine-diagnostics", label: "Engine Diagnostics" },
+    { href: "/services#panel-beating",      label: "Panel Beating" },
+    { href: "/services#wheel-alignment",    label: "Wheel Alignment" },
+    { href: "/services#insurance-repairs",  label: "Insurance Repairs" },
+    { href: "/services",                    label: "All services" }
   ],
   Legal: [
     { href: "/privacy",         label: "Privacy Policy" },

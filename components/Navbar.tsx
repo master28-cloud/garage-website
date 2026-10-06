@@ -3,11 +3,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
+// Absolute paths so these work from every page, not just the homepage.
 const nav = [
-  { href: "#gallery",  label: "Our Work" },
-  { href: "#services", label: "Services" },
-  { href: "#about",    label: "About" },
-  { href: "#team",     label: "Team" }
+  { href: "/our-work",   label: "Our Work" },
+  { href: "/services",   label: "Services" },
+  { href: "/about",      label: "About" },
+  { href: "/about#team", label: "Team" }
 ];
 
 export default function Navbar() {
@@ -45,7 +46,7 @@ export default function Navbar() {
               {n.label}
             </a>
           ))}
-          <a href="#contact" className="btn btn-solid !px-6 !py-2.5 !text-sm">Book a Service</a>
+          <a href="/#contact" className="btn btn-solid !px-6 !py-2.5 !text-sm">Book a Service</a>
         </div>
 
         <button
@@ -67,7 +68,7 @@ export default function Navbar() {
                 {n.label}
               </a>
             ))}
-            <a href="#contact" onClick={() => setOpen(false)} className="btn btn-solid mt-4 w-full">
+            <a href="/#contact" onClick={() => setOpen(false)} className="btn btn-solid mt-4 w-full">
               Book a Service
             </a>
           </div>
