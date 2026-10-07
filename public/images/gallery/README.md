@@ -42,6 +42,17 @@ Open `components/BeforeAfterGallery.tsx` and change the two strings per entry:
 
 Nothing else changes. The sweep, hover and drag all keep working.
 
+## How the section lays out
+
+- The **first** pair is shown full width at **16:9**. Put your most dramatic job here.
+- The rest sit in a two-column grid at **3:2**. A lone last pair spans the full row.
+- Reorder from the admin Gallery tab to choose which pair leads.
+
+The current files here (`corsa-*`, `fiesta-*`, `toyota-*`) are stock placeholders,
+matched on make, model, colour and camera angle. Two are mirrored so each pair
+faces the same way. Mirroring is only safe when no lettering or asymmetric badge
+is readable — never mirror a photo showing a number plate or a VW/GTI badge.
+
 ## Shooting tips
 
 The reveal only looks right when the two frames line up:
