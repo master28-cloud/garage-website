@@ -11,3 +11,8 @@ node_modules
 # Local-only tooling
 .vercel
 START-SITE.bat
+
+# Agent tooling installed by the Vercel CLI; not part of the site
+.agents
+.claude
+skills-lock.json
