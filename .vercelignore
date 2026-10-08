@@ -1,0 +1,13 @@
+# Local secrets and machine-specific config never leave this PC.
+# Production values are set as Vercel environment variables instead.
+.env
+.env.*
+
+# Rebuilt on Vercel's side
+node_modules
+.next
+*.tsbuildinfo
+
+# Local-only tooling
+.vercel
+START-SITE.bat
