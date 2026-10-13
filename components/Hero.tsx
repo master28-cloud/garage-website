@@ -5,12 +5,12 @@ export default function Hero() {
   return (
     <section className="relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-ink">
       <Image
-        src="https://images.unsplash.com/photo-1711386689622-1cda23e10217?auto=format&fit=crop&w=2400&q=85"
-        alt="Technician working on a vehicle in the AutoPro Garage workshop"
+        src="/images/hero-workshop.jpg"
+        alt="AutoPro Garage technicians changing a wheel on a van in the workshop"
         fill
         priority
         sizes="100vw"
-        className="object-cover object-center"
+        className="object-cover object-[70%_center]"
       />
       {/* Legibility scrim — strongest where the copy sits */}
       <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/25" />
