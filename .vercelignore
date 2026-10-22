@@ -11,6 +11,9 @@ node_modules
 # Local-only tooling
 .vercel
 START-SITE.bat
+STOP-SITE.bat
+scripts/local-server.ps1
+logs
 
 # Agent tooling installed by the Vercel CLI; not part of the site
 .agents
