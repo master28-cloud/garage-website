@@ -11,6 +11,7 @@ const links = {
     { href: "/about#team",       label: "Leadership" },
     { href: "/our-work",         label: "Our Work" },
     { href: "/#contact",         label: "Book a Service" },
+    { href: "/track",            label: "Track Your Repair" },
     { href: "/sitemap.xml",      label: "Sitemap" }
   ],
   Services: [

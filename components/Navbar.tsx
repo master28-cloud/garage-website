@@ -8,7 +8,8 @@ const nav = [
   { href: "/our-work",   label: "Our Work" },
   { href: "/services",   label: "Services" },
   { href: "/about",      label: "About" },
-  { href: "/about#team", label: "Team" }
+  { href: "/about#team", label: "Team" },
+  { href: "/track",      label: "Track Repair" }
 ];
 
 export default function Navbar() {
@@ -39,7 +40,7 @@ export default function Navbar() {
           AutoPro
         </Link>
 
-        <div className="hidden items-center gap-9 md:flex">
+        <div className="hidden items-center gap-6 md:flex lg:gap-9">
           {nav.map((n) => (
             <a key={n.href} href={n.href}
                className="text-[15px] font-medium text-white/85 transition-colors hover:text-white">

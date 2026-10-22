@@ -6,6 +6,7 @@ import { buildWhatsAppUrl, bookingMessage } from "@/lib/whatsapp";
 import { getWhatsAppNumber, formatForDisplay } from "@/lib/content";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 import { getDefaultStatusId } from "@/lib/statuses";
+import { bookingReference } from "@/lib/booking";
 
 export const runtime = "nodejs";
 
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
   }
 
   const whatsappNumber = await getWhatsAppNumber();
-  const reference = `APG-${booking.id.slice(-6).toUpperCase()}`;
+  const reference = bookingReference(booking.id);
   const whatsappUrl = buildWhatsAppUrl(
     bookingMessage({
       reference,

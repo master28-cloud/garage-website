@@ -9,6 +9,7 @@ import TodayPanel from "@/components/admin/TodayPanel";
 import { chipStyle, dotColor, type JobStatusRow } from "@/lib/statuses";
 import ContactActions from "@/components/admin/ContactActions";
 import { prettyPhone } from "@/lib/contact";
+import { bookingReference } from "@/lib/booking";
 import { Search, Inbox, SlidersHorizontal } from "lucide-react";
 
 type Booking = {
@@ -60,7 +61,7 @@ export default function DashboardClient({
       bookings.filter((b) => {
         if (filter !== "ALL" && b.statusId !== filter) return false;
         if (!q.trim()) return true;
-        const hay = `${b.name} ${b.phone} ${b.email ?? ""} ${b.vehicleMake} ${b.vehicleModel} ${b.service}`;
+        const hay = `${bookingReference(b.id)} ${b.name} ${b.phone} ${b.email ?? ""} ${b.vehicleMake} ${b.vehicleModel} ${b.service}`;
         return hay.toLowerCase().includes(q.toLowerCase());
       }),
     [bookings, q, filter]
@@ -163,7 +164,7 @@ export default function DashboardClient({
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search name, phone, vehicle…"
+                  placeholder="Search name, phone, ref…"
                   className="w-56 rounded-xl border border-black/10 py-2.5 pl-10 pr-3 text-sm text-ink placeholder:text-steel-light focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/20"
                 />
               </div>
@@ -213,7 +214,9 @@ export default function DashboardClient({
                           </span>
                           <div className="min-w-0">
                             <div className="truncate font-semibold text-ink">{b.name}</div>
-                            <div className="truncate text-xs text-steel">{prettyPhone(b.phone)} · {relativeTime(b.createdAt)}</div>
+                            <div className="truncate text-xs text-steel">
+                              <span className="font-mono font-semibold text-ink/70">{bookingReference(b.id)}</span> · {prettyPhone(b.phone)} · {relativeTime(b.createdAt)}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -249,7 +252,9 @@ export default function DashboardClient({
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="truncate font-semibold text-ink">{b.name}</p>
-                            <p className="truncate text-xs text-steel">{prettyPhone(b.phone)}</p>
+                            <p className="truncate text-xs text-steel">
+                              <span className="font-mono font-semibold text-ink/70">{bookingReference(b.id)}</span> · {prettyPhone(b.phone)}
+                            </p>
                           </div>
                           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
                                 style={chipStyle(b.status.color)}>
